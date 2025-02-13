@@ -54,43 +54,48 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Positioned(
-              left: 117,
+              left: 105, // Adjusted for centering
               top: 527,
               child: GestureDetector(
                 onTap: () {
                   print("Browse Categories Clicked");
                 },
                 child: Container(
-                  width: 169,
-                  height: 47,
+                  width: 200, // Increased width
+                  height: 55, // Slightly increased height
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border.all(width: 1, color: const Color(0xFFD9D9D9)),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Center(
-                    child: Text(
-                      'Browse Categories',
-                      style: TextStyle(
-                        color: Color(0xFF707070),
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 16), // Added padding
+                        child: Text(
+                          'Browse Categories',
+                          style: TextStyle(
+                            color: Color(0xFF707070),
+                            fontSize: 14,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
+                      Padding(
+                        padding: EdgeInsets.only(right: 16), // Added padding
+                        child: Icon(Icons.chevron_right, size: 31, color: Color(0xFF707070)),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
             const Positioned(
-              left: 250,
-              top: 422,
-              child: Icon(Icons.chat_bubble, size: 57, color: Colors.white),
-            ),
-            const Positioned(
-              left: 255,
-              top: 535,
-              child: Icon(Icons.category, size: 31, color: Color(0xFF707070)),
+              left: 78 + 247 - 30 - 16, // Adjusted positioning
+              top: 405 + (91 - 30) / 2, // Centered with text
+              child: Icon(Icons.chat_bubble, size: 30, color: Colors.black),
             ),
             Positioned(
               left: -36,
