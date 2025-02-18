@@ -10,6 +10,7 @@ class HomeScreen extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
+          color: Colors.white,
           image: DecorationImage(
             image: AssetImage('assets/HomeScreen.png'), // Path to your image
             fit: BoxFit.cover, // Ensures the image covers the entire screen
@@ -79,7 +80,7 @@ class HomeScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(left: 16),
+                        padding: EdgeInsets.only(left: 20),
                         child: Text(
                           'Browse Categories',
                           style: TextStyle(
@@ -93,7 +94,7 @@ class HomeScreen extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.only(right: 16),
                         child: Icon(Icons.chevron_right,
-                            size: 31, color: Color(0xFF707070)),
+                            size: 24, color: Color(0xFF707070)),
                       ),
                     ],
                   ),
@@ -103,7 +104,7 @@ class HomeScreen extends StatelessWidget {
             const Positioned(
               left: 78 + 247 - 30 - 16,
               top: 405 + (91 - 30) / 2,
-              child: Icon(Icons.chat_bubble, size: 30, color: Colors.black),
+              child: Icon(Icons.chevron_right, size: 30, color: Colors.black),
             ),
             Positioned(
               left: -36,
