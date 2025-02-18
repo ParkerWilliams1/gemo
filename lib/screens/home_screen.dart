@@ -1,3 +1,20 @@
+/*
+    home_screen.dart
+    February 18, 2025
+    Grace Bergquist
+    This file contains the logic for the home screen, where users can navigate to new chats, browse categories screen, or access the menu screen.
+    
+    Functions:
+    - HomeScreen: Constructor for the HomeScreen class
+    - build: Builds the home screen with the specified layout and design
+
+    Variables Accessed by Module:
+    - N/A
+
+    History of Modifications:
+    - N/A
+*/
+
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {

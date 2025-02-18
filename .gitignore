@@ -39,4 +39,6 @@ app-example
 .dart_tool/
 /build/
 /ios/
-/android/
+/android/.vscode/
+.vscode/
+

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/screen_home.dart'; // Import the HomeScreen file
+import 'screens/home_screen.dart'; // Import the HomeScreen file
 import 'screens/profile_screen.dart'; // Import the ProfileScreen file
 
 void main() {
