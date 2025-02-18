@@ -9,19 +9,26 @@ class HomeScreen extends StatelessWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(color: Colors.white),
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/HomeScreen.png'), // Path to your image
+            fit: BoxFit.cover, // Ensures the image covers the entire screen
+          ),
+        ),
         child: Stack(
           children: [
-            const Positioned(
-              left: 40,
-              top: 290,
-              child: Text(
-                'Let’s Chat!',
-                style: TextStyle(
-                  color: Color(0xFF707070),
-                  fontSize: 62,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
+            const Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: EdgeInsets.only(top: 290),
+                child: Text(
+                  'Let’s Chat!',
+                  style: TextStyle(
+                    color: Color(0xFF707070),
+                    fontSize: 62,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -54,17 +61,17 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Positioned(
-              left: 105, // Adjusted for centering
+              left: 105,
               top: 527,
               child: GestureDetector(
                 onTap: () {
                   print("Browse Categories Clicked");
                 },
                 child: Container(
-                  width: 200, // Increased width
-                  height: 55, // Slightly increased height
+                  width: 200,
+                  height: 55,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withOpacity(0.8), // Slight transparency
                     border: Border.all(width: 1, color: const Color(0xFFD9D9D9)),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -72,7 +79,7 @@ class HomeScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(left: 16), // Added padding
+                        padding: EdgeInsets.only(left: 16),
                         child: Text(
                           'Browse Categories',
                           style: TextStyle(
@@ -84,8 +91,9 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(right: 16), // Added padding
-                        child: Icon(Icons.chevron_right, size: 31, color: Color(0xFF707070)),
+                        padding: EdgeInsets.only(right: 16),
+                        child: Icon(Icons.chevron_right,
+                            size: 31, color: Color(0xFF707070)),
                       ),
                     ],
                   ),
@@ -93,8 +101,8 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const Positioned(
-              left: 78 + 247 - 30 - 16, // Adjusted positioning
-              top: 405 + (91 - 30) / 2, // Centered with text
+              left: 78 + 247 - 30 - 16,
+              top: 405 + (91 - 30) / 2,
               child: Icon(Icons.chat_bubble, size: 30, color: Colors.black),
             ),
             Positioned(
@@ -104,7 +112,7 @@ class HomeScreen extends StatelessWidget {
                 width: 473,
                 height: 136,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withOpacity(0.8),
                   border: Border.all(width: 1, color: const Color(0xFFD9D9D9)),
                 ),
               ),

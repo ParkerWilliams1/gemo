@@ -9,7 +9,7 @@ class ProfileScreen extends StatefulWidget {
   final String email;
   final String password;
 
-  ProfileScreen({
+  const ProfileScreen({super.key, 
     this.firstName = '',
     this.lastName = '',
     this.major = '',
@@ -60,13 +60,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+        title: const Text('Profile', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,
-        actions: [
+        actions: const [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: EdgeInsets.only(right: 16.0),
             child: Icon(Icons.settings, color: Colors.black),
           ),
         ],
@@ -82,10 +82,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildProfileField('Username', usernameController),
             _buildProfileField('Email', emailController),
             _buildProfileField('Password', passwordController, isPassword: true),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveAndReturn,
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
           ],
         ),
@@ -101,18 +101,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           TextField(
             controller: controller,
             obscureText: isPassword,
             decoration: InputDecoration(
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5),
-                borderSide: BorderSide(color: Color(0xFFD9D9D9)),
+                borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
               ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
           ),
         ],

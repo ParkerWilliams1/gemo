@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _navigateToHomeScreen() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
   }
 
