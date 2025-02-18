@@ -3,6 +3,7 @@
     February 18, 2025
     Grace Bergquist
     This file contains the logic for the profile screen, where users can view and edit their profile information.
+    
     Functions:
     - ProfileScreen: Constructor for the ProfileScreen class
     - _ProfileScreenState: State class for the ProfileScreen
