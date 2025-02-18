@@ -1,6 +1,61 @@
 import 'package:flutter/material.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  final String firstName;
+  final String lastName;
+  final String major;
+  final String subjects;
+  final String username;
+  final String email;
+  final String password;
+
+  ProfileScreen({
+    this.firstName = '',
+    this.lastName = '',
+    this.major = '',
+    this.subjects = '',
+    this.username = '',
+    this.email = '',
+    this.password = '',
+  });
+
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late TextEditingController firstNameController;
+  late TextEditingController lastNameController;
+  late TextEditingController majorController;
+  late TextEditingController subjectsController;
+  late TextEditingController usernameController;
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+  
+  @override
+  void initState() {
+    super.initState();
+    firstNameController = TextEditingController(text: widget.firstName);
+    lastNameController = TextEditingController(text: widget.lastName);
+    majorController = TextEditingController(text: widget.major);
+    subjectsController = TextEditingController(text: widget.subjects);
+    usernameController = TextEditingController(text: widget.username);
+    emailController = TextEditingController(text: widget.email);
+    passwordController = TextEditingController(text: widget.password);
+  }
+
+  void _saveAndReturn() {
+    Navigator.pop(context, {
+      'firstName': firstNameController.text,
+      'lastName': lastNameController.text,
+      'major': majorController.text,
+      'subjects': subjectsController.text,
+      'username': usernameController.text,
+      'email': emailController.text,
+      'password': passwordController.text,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,20 +75,25 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            _buildProfileField('Username', 'Jsmith11'),
-            _buildProfileField('Email', 'jwsmith@calbaptist.edu'),
-            _buildProfileField('Password', '**********', isObscure: true),
-            _buildProfileField('First Name', 'John'),
-            _buildProfileField('Last Name', 'Smith'),
-            _buildProfileField('Major', 'Computer Science'),
-            _buildProfileField('Tutoring Subjects', 'Computer Science, Calculus I'),
+            _buildProfileField('First Name', firstNameController),
+            _buildProfileField('Last Name', lastNameController),
+            _buildProfileField('Major', majorController),
+            _buildProfileField('Tutoring Subjects', subjectsController),
+            _buildProfileField('Username', usernameController),
+            _buildProfileField('Email', emailController),
+            _buildProfileField('Password', passwordController, isPassword: true),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveAndReturn,
+              child: Text('Save'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileField(String label, String value, {bool isObscure = false}) {
+  Widget _buildProfileField(String label, TextEditingController controller, {bool isPassword = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -45,10 +105,9 @@ class ProfileScreen extends StatelessWidget {
           ),
           SizedBox(height: 5),
           TextField(
-            obscureText: isObscure,
-            readOnly: true,
+            controller: controller,
+            obscureText: isPassword,
             decoration: InputDecoration(
-              hintText: value,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5),
                 borderSide: BorderSide(color: Color(0xFFD9D9D9)),

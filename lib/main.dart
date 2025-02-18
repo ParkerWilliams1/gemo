@@ -32,17 +32,38 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String firstName = '';
+  String lastName = '';
+  String major = '';
+  String subjects = '';
+
+  void _navigateToProfileScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(
+          firstName: firstName,
+          lastName: lastName,
+          major: major,
+          subjects: subjects,
+        ),
+      ),
+    );
+    
+    if (result != null) {
+      setState(() {
+        firstName = result['firstName'];
+        lastName = result['lastName'];
+        major = result['major'];
+        subjects = result['subjects'];
+      });
+    }
+  }
+
   void _navigateToHomeScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
-  }
-
-  void _navigateToProfileScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ProfileScreen()),
     );
   }
 
@@ -58,20 +79,20 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'Tap the button to navigate to Home Screen:',
+              'Tap a button to navigate:',
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _navigateToProfileScreen,
               child: const Text('Go to Profile Screen'),
             ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _navigateToHomeScreen,
+              child: const Text('Go to Home Screen'),
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToHomeScreen, // Navigate on button press
-        tooltip: 'Go to Home Screen',
-        child: const Icon(Icons.arrow_forward),
       ),
     );
   }
