@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/screen_home.dart'; // Import the HomeScreen file
+import 'screens/profile_screen.dart'; // Import the ProfileScreen file
 
 void main() {
   runApp(const MyApp());
@@ -38,6 +39,13 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _navigateToProfileScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ProfileScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +59,11 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             const Text(
               'Tap the button to navigate to Home Screen:',
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _navigateToProfileScreen,
+              child: const Text('Go to Profile Screen'),
             ),
           ],
         ),
