@@ -9,6 +9,9 @@ class RegisterPage extends StatelessWidget {
   // text editing controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+  final firstnameController = TextEditingController();
+  final lastnameController = TextEditingController();
+  final confirmpassController = TextEditingController();
 
   // sign user up method
   void signUserUp() {}
@@ -46,9 +49,9 @@ class RegisterPage extends StatelessWidget {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
                   child: MyTextField(
-                    controller: passwordController,
+                    controller: firstnameController,
                     hintText: 'First Name',
-                    obscureText: true,
+                    obscureText: false,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: const Color.fromARGB(255, 250, 242, 242),
@@ -83,9 +86,9 @@ class RegisterPage extends StatelessWidget {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
                   child: MyTextField(
-                    controller: passwordController,
+                    controller: lastnameController,
                     hintText: 'Last Name',
-                    obscureText: true,
+                    obscureText: false,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: const Color.fromARGB(255, 250, 242, 242),
@@ -194,7 +197,7 @@ class RegisterPage extends StatelessWidget {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
                   child: MyTextField(
-                    controller: passwordController,
+                    controller: confirmpassController,
                     hintText: 'Confirm Password',
                     obscureText: true,
                     decoration: InputDecoration(
