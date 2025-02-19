@@ -2,6 +2,18 @@
 
 # dependencies
 node_modules/
+  
+# Firebase options file
+lib/firebase_options.dart
+
+# Build + Platform folders
+build/
+android/
+ios/
+linux/
+web/
+macos/
+windows/
 
 # Expo
 .expo/
