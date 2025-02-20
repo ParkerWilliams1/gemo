@@ -2,6 +2,18 @@
 
 # dependencies
 node_modules/
+  
+# Firebase options file
+lib/firebase_options.dart
+
+# Build + Platform folders
+build/
+android/
+ios/
+linux/
+web/
+macos/
+windows/
 
 # Expo
 .expo/
@@ -20,7 +32,7 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# Debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
@@ -29,16 +41,17 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# Local env files
 .env*.local
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 
-app-example
+# Flutter/Dart
 .dart_tool/
+
+# Additional entries from testing branch
 /build/
 /ios/
 /android/.vscode/
 .vscode/
-
