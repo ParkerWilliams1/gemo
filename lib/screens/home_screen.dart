@@ -1,147 +1,194 @@
-/*
-    home_screen.dart
-    February 18, 2025
-    Grace Bergquist
-    This file contains the logic for the home screen, where users can navigate to new chats, browse categories screen, or access the menu screen.
-    
-    Functions:
-    - HomeScreen: Constructor for the HomeScreen class
-    - build: Builds the home screen with the specified layout and design
-
-    Variables Accessed by Module:
-    - N/A
-
-    History of Modifications:
-    - N/A
-*/
-
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isSignUp = false;
+
+  void _signUp() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isNotEmpty && password.isNotEmpty) {
+      try {
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
+                email: email, password: password);
+
+        await userCredential.user?.sendEmailVerification();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Verification email sent! Check your inbox.")),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
+
+  void _signIn() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isNotEmpty && password.isNotEmpty) {
+      try {
+        UserCredential userCredential =
+            await _auth.signInWithEmailAndPassword(
+                email: email, password: password);
+
+        if (!userCredential.user!.emailVerified) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Please verify your email before signing in.")),
+          );
+          await userCredential.user!.sendEmailVerification();
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
+
+  void _signOut() async {
+    await _auth.signOut();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          image: DecorationImage(
-            image: AssetImage('assets/HomeScreen.png'), // Path to your image
-            fit: BoxFit.cover, // Ensures the image covers the entire screen
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: EdgeInsets.only(top: 290),
-                child: Text(
-                  'Let’s Chat!',
-                  style: TextStyle(
-                    color: Color(0xFF707070),
-                    fontSize: 62,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 78,
-              top: 405,
-              child: GestureDetector(
-                onTap: () {
-                  print("New Chat Clicked");
-                },
-                child: Container(
-                  width: 247,
-                  height: 91,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF83B9FF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'New Chat',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w700,
+      body: StreamBuilder<User?>(
+        stream: _auth.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.active) {
+            User? user = snapshot.data;
+            if (user == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: "Email",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email),
+                        ),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: "Password",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock),
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _isSignUp ? _signUp : _signIn,
+                      child: Text(_isSignUp ? "Sign Up" : "Sign In"),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSignUp = !_isSignUp;
+                        });
+                      },
+                      child: Text(_isSignUp
+                          ? "Already have an account? Sign In"
+                          : "Don't have an account? Sign Up"),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              return Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  image: DecorationImage(
+                    image: AssetImage('assets/HomeScreen.png'),
+                    fit: BoxFit.cover,
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              left: 105,
-              top: 527,
-              child: GestureDetector(
-                onTap: () {
-                  print("Browse Categories Clicked");
-                },
-                child: Container(
-                  width: 200,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8), // Slight transparency
-                    border: Border.all(width: 1, color: const Color(0xFFD9D9D9)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 20),
+                child: Stack(
+                  children: [
+                    const Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 290),
                         child: Text(
-                          'Browse Categories',
+                          'Let’s Chat!',
                           style: TextStyle(
                             color: Color(0xFF707070),
-                            fontSize: 14,
+                            fontSize: 62,
                             fontFamily: 'Inter',
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(right: 16),
-                        child: Icon(Icons.chevron_right,
-                            size: 24, color: Color(0xFF707070)),
+                    ),
+                    Positioned(
+                      left: 78,
+                      top: 405,
+                      child: GestureDetector(
+                        onTap: () {
+                          print("New Chat Clicked");
+                        },
+                        child: Container(
+                          width: 247,
+                          height: 91,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF83B9FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'New Chat',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 24,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Positioned(
+                      right: 20,
+                      top: 50,
+                      child: IconButton(
+                        icon: const Icon(Icons.logout, size: 30, color: Colors.black),
+                        onPressed: _signOut,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            const Positioned(
-              left: 78 + 247 - 30 - 16,
-              top: 405 + (91 - 30) / 2,
-              child: Icon(Icons.chevron_right, size: 30, color: Colors.black),
-            ),
-            Positioned(
-              left: -36,
-              top: -33,
-              child: Container(
-                width: 473,
-                height: 136,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  border: Border.all(width: 1, color: const Color(0xFFD9D9D9)),
-                ),
-              ),
-            ),
-            const Positioned(
-              left: 325,
-              top: 37,
-              child: Icon(Icons.settings, size: 48, color: Colors.grey),
-            ),
-          ],
-        ),
+              );
+            }
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
