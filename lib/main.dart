@@ -1,14 +1,22 @@
 // Richards Edited main.dart file
 import 'package:flutter/material.dart';
-import 'welcome_screen.dart';
-import 'home_screen.dart';
-import 'chatroom_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'screens/splash_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/chat_home_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/sign_in_screen.dart';
+import 'screens/sign_up_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
- 
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -20,12 +28,19 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: WelcomeScreen.routeName,
+      initialRoute: SplashScreen.routeName,
       routes: {
-        WelcomeScreen.routeName: (context) => const WelcomeScreen(),
+        SplashScreen.routeName: (context) => const SplashScreen(),
         HomeScreen.routeName: (context) => const HomeScreen(),
-        ChatroomScreen.routeName: (context) => const ChatroomScreen(),      
-        },
+        ChatHomeScreen.routeName: (context) => ChatHomeScreen(),
+        ProfileScreen.routeName: (context) => const ProfileScreen(),
+        SignInScreen.routeName: (context) => SignInScreen(toggleScreen: () {
+              Navigator.pushReplacementNamed(context, SignUpScreen.routeName);
+            }),
+        SignUpScreen.routeName: (context) => SignUpScreen(toggleScreen: () {
+              Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+            }),
+      },
     );
   }
 }
