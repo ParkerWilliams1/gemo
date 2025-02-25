@@ -125,11 +125,11 @@ class ChatHomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const Positioned(
-              left: 325,
-              top: 37,
-              child: Icon(Icons.settings, size: 48, color: Colors.grey),
-            ),
+            // const Positioned(
+            //   left: 325,
+            //   top: 37,
+            //   child: Icon(Icons.settings, size: 48, color: Colors.grey),
+            // ),
             Positioned(
               right: 20,
               top: 50,
