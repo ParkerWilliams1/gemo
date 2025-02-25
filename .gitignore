@@ -55,3 +55,11 @@ yarn-error.*
 /ios/
 /android/.vscode/
 .vscode/
+.flutter-plugins
+.flutter-plugins-dependencies
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Release.xcconfig
+ios/Runner.xcodeproj/project.pbxproj
+ios/Runner.xcworkspace/contents.xcworkspacedata
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
