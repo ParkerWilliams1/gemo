@@ -28,4 +28,4 @@ flutter:
   assets:
    - lib/images/background.png
    - lib/images/gemo.png
-    - assets/HomeScreen.png
+   - lib/images/HomeScreen.png
