@@ -163,13 +163,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Positioned(
                     left: 145,
                     top: 164,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(25),
-                      child: Image.asset(
-                        'lib/images/gemo.png', // Local image
-                        width: 114,
-                        height: 114,
-                        fit: BoxFit.cover,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+                        child: Image.asset(
+                          'lib/images/gemo.png', // Local image with shadow
+                          width: 114,
+                          height: 114,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
