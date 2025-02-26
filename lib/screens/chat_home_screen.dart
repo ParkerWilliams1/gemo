@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gemo/auth_service.dart';
+import 'package:gemo/screens/text_chat_screen.dart';
 
 class ChatHomeScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
@@ -45,7 +46,10 @@ class ChatHomeScreen extends StatelessWidget {
               top: 405,
               child: GestureDetector(
                 onTap: () {
-                  print("New Chat Clicked");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ChatScreen()),
+                  );
                 },
                 child: Container(
                   width: 247,
@@ -68,6 +72,7 @@ class ChatHomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+
             Positioned(
               left: 105,
               top: 527,
@@ -80,7 +85,8 @@ class ChatHomeScreen extends StatelessWidget {
                   height: 55,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.8),
-                    border: Border.all(width: 1, color: const Color(0xFFD9D9D9)),
+                    border:
+                        Border.all(width: 1, color: const Color(0xFFD9D9D9)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Row(
