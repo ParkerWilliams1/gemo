@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 
 class ChatHomeScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   ChatHomeScreen({super.key});
 
@@ -11,141 +15,154 @@ class ChatHomeScreen extends StatelessWidget {
     await _authService.signOut();
   }
 
+  // Function to start a new chat with a randomly matched user
+  void _startNewChat(BuildContext context) async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      print("No user is logged in.");
+      return;
+    }
+
+    print("Current user ID: ${currentUser.uid}");
+
+    DocumentReference currentUserRef =
+        _firestore.collection('users').doc(currentUser.uid);
+    DocumentSnapshot currentUserDoc = await currentUserRef.get();
+
+    // Ensure the current user document exists
+    if (!currentUserDoc.exists) {
+      print("Current user document does not exist. Creating...");
+      await currentUserRef.set({
+        "uid": currentUser.uid,
+        "email": currentUser.email,
+        "matchable": true,
+        "currentChat": null,
+        "schoolDomain": currentUser.email!.split('@').last,
+        "createdAt": FieldValue.serverTimestamp(),
+      });
+      print("User document created.");
+    } else {
+      print("Current user document exists.");
+    }
+
+    // Find another matchable user
+    print("Searching for available users...");
+    QuerySnapshot usersSnapshot = await _firestore
+        .collection('users')
+        .where('matchable', isEqualTo: true)
+        .where('uid', isNotEqualTo: currentUser.uid) // Exclude current user
+        .limit(1)
+        .get();
+
+    if (usersSnapshot.docs.isEmpty) {
+      print("No available users for matching.");
+      return;
+    }
+
+    // Instead of using `uid`, use Firestore's actual document ID
+    DocumentSnapshot matchedUserDoc = usersSnapshot.docs.first;
+    String matchedUserFirestoreId = matchedUserDoc.id; // Firestore document ID
+    String matchedUserUid =
+        matchedUserDoc['uid'].toString(); // User's actual UID
+
+    print(
+        "Matched user found: Firestore ID = $matchedUserFirestoreId, UID = $matchedUserUid");
+
+    DocumentReference matchedUserRef =
+        _firestore.collection('users').doc(matchedUserFirestoreId);
+    DocumentSnapshot matchedUserExistsCheck = await matchedUserRef.get();
+
+    if (!matchedUserExistsCheck.exists) {
+      print("Error: Matched user document does not exist in Firestore.");
+      return;
+    }
+
+    // Create a new chat
+    var newChatRef = _firestore.collection('chats').doc();
+    print("Creating new chat with ID: ${newChatRef.id}");
+
+    await newChatRef.set({
+      "participants": [
+        currentUser.uid,
+        matchedUserUid
+      ], // Store actual UID, not Firestore ID
+      "createdAt": FieldValue.serverTimestamp(),
+      "chatStatus": "active"
+    });
+
+    // Update users' chat status
+    print("Updating users' chat status...");
+    await currentUserRef
+        .update({"currentChat": newChatRef.id, "matchable": false});
+
+    await matchedUserRef
+        .update({"currentChat": newChatRef.id, "matchable": false});
+
+    print("Chat successfully created! Navigating to chat screen...");
+
+    // Navigate to the new chat
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => ChatScreen(chatId: newChatRef.id)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          image: DecorationImage(
-            image: AssetImage('assets/HomeScreen.png'), // Background Image
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: EdgeInsets.only(top: 290),
-                child: Text(
-                  'Let’s Chat!',
-                  style: TextStyle(
-                    color: Color(0xFF707070),
-                    fontSize: 62,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                  ),
+      body: Stack(
+        children: [
+          const Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.only(top: 290),
+              child: Text(
+                'Let’s Chat!',
+                style: TextStyle(
+                  color: Color(0xFF707070),
+                  fontSize: 62,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-            Positioned(
-              left: 78,
-              top: 405,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ChatScreen()),
-                  );
-                },
-                child: Container(
-                  width: 247,
-                  height: 91,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF83B9FF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'New Chat',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w700,
-                      ),
+          ),
+          Positioned(
+            left: 78,
+            top: 405,
+            child: GestureDetector(
+              onTap: () => _startNewChat(context),
+              child: Container(
+                width: 247,
+                height: 91,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF83B9FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'New Chat',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
             ),
-
-            Positioned(
-              left: 105,
-              top: 527,
-              child: GestureDetector(
-                onTap: () {
-                  print("Browse Categories Clicked");
-                },
-                child: Container(
-                  width: 200,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8),
-                    border:
-                        Border.all(width: 1, color: const Color(0xFFD9D9D9)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 20),
-                        child: Text(
-                          'Browse Categories',
-                          style: TextStyle(
-                            color: Color(0xFF707070),
-                            fontSize: 14,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(right: 16),
-                        child: Icon(Icons.chevron_right,
-                            size: 24, color: Color(0xFF707070)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          ),
+          Positioned(
+            right: 20,
+            top: 50,
+            child: IconButton(
+              icon: const Icon(Icons.logout, size: 30, color: Colors.black),
+              onPressed: () => _signOut(context),
             ),
-            const Positioned(
-              left: 78 + 247 - 30 - 16,
-              top: 405 + (91 - 30) / 2,
-              child: Icon(Icons.chevron_right, size: 30, color: Colors.black),
-            ),
-            Positioned(
-              left: -36,
-              top: -33,
-              child: Container(
-                width: 473,
-                height: 136,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  border: Border.all(width: 1, color: Colors.white),
-                ),
-              ),
-            ),
-            // const Positioned(
-            //   left: 325,
-            //   top: 37,
-            //   child: Icon(Icons.settings, size: 48, color: Colors.grey),
-            // ),
-            Positioned(
-              right: 20,
-              top: 50,
-              child: IconButton(
-                icon: const Icon(Icons.logout, size: 30, color: Colors.black),
-                onPressed: () => _signOut(context),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
