@@ -6,6 +6,7 @@ import 'sign_up_screen.dart';
 import 'chat_home_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  static const routeName = '/home';
   const HomeScreen({super.key});
 
   @override

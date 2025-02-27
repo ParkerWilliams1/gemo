@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:gemo/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
+  static const routeName = '/signup';
+
   final VoidCallback toggleScreen;
   const SignUpScreen({super.key, required this.toggleScreen});
 

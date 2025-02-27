@@ -28,6 +28,8 @@
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
+  static const routeName = '/profile';
+  
   final String firstName;
   final String lastName;
   final String major;
@@ -46,7 +48,6 @@ class ProfileScreen extends StatefulWidget {
     this.password = '',
   });
 
-  @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
