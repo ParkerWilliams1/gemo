@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:gemo/menu_screen.dart';
+import 'package:gemo/groups_screen.dart';
 
 
 void main() {
-  runApp( const MenuScreen());
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: GroupsScreen(),
+    );
+  }
 }
 
