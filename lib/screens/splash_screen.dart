@@ -35,13 +35,13 @@ class SplashScreenState extends State<SplashScreen> {
         foregroundColor: const Color.fromARGB(255, 255, 255, 255),
         backgroundColor: const Color.fromARGB(255, 225, 127, 0),
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FlutterLogo(size: 100),
-            SizedBox(height: 20),
-            Text(
+            Image.asset('lib/images/gemo.png', width: 100, height: 100),
+            const SizedBox(height: 20),
+            const Text(
               'Welcome to Gemo!',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
