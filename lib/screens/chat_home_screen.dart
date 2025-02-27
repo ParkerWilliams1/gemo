@@ -3,7 +3,8 @@ import 'package:gemo/auth_service.dart';
 
 class ChatHomeScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
-    static const routeName = '/chathome';  
+  static const routeName = '/chathome';  
+
   ChatHomeScreen({super.key});
 
   void _signOut(BuildContext context) async {
