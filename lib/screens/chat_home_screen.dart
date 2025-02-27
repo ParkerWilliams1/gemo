@@ -23,29 +23,22 @@ class ChatHomeScreen extends StatelessWidget {
       return;
     }
 
-    print("Current user ID: ${currentUser.uid}");
-
     DocumentReference currentUserRef =
         _firestore.collection('users').doc(currentUser.uid);
     DocumentSnapshot currentUserDoc = await currentUserRef.get();
 
-    // Ensure the current user document exists
-    if (!currentUserDoc.exists) {
-      print("Current user document does not exist. Creating...");
-      await currentUserRef.set({
-        "uid": currentUser.uid,
-        "email": currentUser.email,
-        "matchable": true,
-        "currentChat": null,
-        "schoolDomain": currentUser.email!.split('@').last,
-        "createdAt": FieldValue.serverTimestamp(),
-      });
-      print("User document created.");
-    } else {
-      print("Current user document exists.");
+    if (currentUserDoc.exists) {
+      bool isMatchable = currentUserDoc["matchable"] ?? false;
+
+      // If user is not matchable, reset them so they can be matched again
+      if (!isMatchable) {
+        print("User was not matchable, resetting...");
+        await currentUserRef.update({
+          "matchable": true,
+        });
+      }
     }
 
-    // Find another matchable user
     print("Searching for available users...");
     QuerySnapshot usersSnapshot = await _firestore
         .collection('users')
@@ -59,28 +52,19 @@ class ChatHomeScreen extends StatelessWidget {
       return;
     }
 
-    // Instead of using `uid`, use Firestore's actual document ID
-    DocumentSnapshot matchedUserDoc = usersSnapshot.docs.first;
-    String matchedUserFirestoreId = matchedUserDoc.id; // Firestore document ID
-    String matchedUserUid =
-        matchedUserDoc['uid'].toString(); // User's actual UID
-
-    print(
-        "Matched user found: Firestore ID = $matchedUserFirestoreId, UID = $matchedUserUid");
-
+    String matchedUserUid = usersSnapshot.docs.first['uid'];
     DocumentReference matchedUserRef =
-        _firestore.collection('users').doc(matchedUserFirestoreId);
-    DocumentSnapshot matchedUserExistsCheck = await matchedUserRef.get();
+        _firestore.collection('users').doc(usersSnapshot.docs.first.id);
 
-    if (!matchedUserExistsCheck.exists) {
-      print("Error: Matched user document does not exist in Firestore.");
+    print("Matched user found: $matchedUserUid");
+
+    DocumentSnapshot matchedUserDoc = await matchedUserRef.get();
+    if (!matchedUserDoc.exists) {
+      print("Error: Matched user document does not exist.");
       return;
     }
 
-    // Create a new chat
     var newChatRef = _firestore.collection('chats').doc();
-    print("Creating new chat with ID: ${newChatRef.id}");
-
     await newChatRef.set({
       "participants": [
         currentUser.uid,
@@ -90,8 +74,6 @@ class ChatHomeScreen extends StatelessWidget {
       "chatStatus": "active"
     });
 
-    // Update users' chat status
-    print("Updating users' chat status...");
     await currentUserRef
         .update({"currentChat": newChatRef.id, "matchable": false});
 
@@ -99,8 +81,6 @@ class ChatHomeScreen extends StatelessWidget {
         .update({"currentChat": newChatRef.id, "matchable": false});
 
     print("Chat successfully created! Navigating to chat screen...");
-
-    // Navigate to the new chat
     Navigator.push(
       context,
       MaterialPageRoute(
