@@ -36,84 +36,86 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.clear();
   }
 
-void _leaveChat() async {
-  User? user = _auth.currentUser;
-  if (user == null) {
-    print("No authenticated user found.");
-    return;
-  }
-
-  DocumentReference userRef = _firestore.collection('users').doc(user.uid);
-  DocumentSnapshot userDoc = await userRef.get();
-
-  if (!userDoc.exists) {
-    print("Current user document not found in Firestore.");
-    return;
-  }
-
-  String? currentChatId = userDoc['currentChat'];
-  if (currentChatId == null) {
-    print("User is not currently in an active chat.");
-    return;
-  }
-
-  DocumentReference chatRef = _firestore.collection('chats').doc(currentChatId);
-  DocumentSnapshot chatDoc = await chatRef.get();
-
-  if (!chatDoc.exists) {
-    print("Chat document not found in Firestore.");
-    return;
-  }
-
-  print("Chat found: ${chatDoc.data()}");
-
-  List<dynamic> participants = chatDoc['participants'];
-  if (participants.length < 2) {
-    print("Warning: Chat has less than 2 participants.");
-  }
-
-  // Find the other user in the chat
-  String? otherUserUid = participants.firstWhere((id) => id != user.uid, orElse: () => null);
-
-  print("Current user ID: ${user.uid}");
-  print("Other user UID: $otherUserUid");
-
-  // Update current user
-  await userRef.update({
-    "currentChat": null,
-    "matchable": true,
-  });
-
-  print("Current user ${user.uid} is now matchable again.");
-
-  // 🔹 Instead of using Firestore document ID, search for the other user by their `uid`
-  if (otherUserUid != null) {
-    QuerySnapshot userQuery = await _firestore.collection('users')
-        .where("uid", isEqualTo: otherUserUid)
-        .limit(1)
-        .get();
-
-    if (userQuery.docs.isNotEmpty) {
-      DocumentReference otherUserRef = userQuery.docs.first.reference;
-      
-      await otherUserRef.update({
-        "currentChat": null,
-        "matchable": true,
-      });
-      print("Other user ($otherUserUid) is now matchable again.");
-    } else {
-      print("Error: Other user document not found in Firestore.");
+  void _leaveChat() async {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      print("No authenticated user found.");
+      return;
     }
-  } else {
-    print("Error: No other user found in the chat.");
+
+    DocumentReference userRef = _firestore.collection('users').doc(user.uid);
+    DocumentSnapshot userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      print("Current user document not found in Firestore.");
+      return;
+    }
+
+    String? currentChatId = userDoc['currentChat'];
+    if (currentChatId == null) {
+      print("User is not currently in an active chat.");
+      return;
+    }
+
+    DocumentReference chatRef =
+        _firestore.collection('chats').doc(currentChatId);
+    DocumentSnapshot chatDoc = await chatRef.get();
+
+    if (!chatDoc.exists) {
+      print("Chat document not found in Firestore.");
+      return;
+    }
+
+    print("Chat found: ${chatDoc.data()}");
+
+    List<dynamic> participants = chatDoc['participants'];
+    if (participants.length < 2) {
+      print("Warning: Chat has less than 2 participants.");
+    }
+
+    // Find the other user in the chat
+    String? otherUserUid =
+        participants.firstWhere((id) => id != user.uid, orElse: () => null);
+
+    print("Current user ID: ${user.uid}");
+    print("Other user UID: $otherUserUid");
+
+    // Update current user
+    await userRef.update({
+      "currentChat": null,
+      "matchable": true,
+    });
+
+    print("Current user ${user.uid} is now matchable again.");
+
+    // 🔹 Instead of using Firestore document ID, search for the other user by their `uid`
+    if (otherUserUid != null) {
+      QuerySnapshot userQuery = await _firestore
+          .collection('users')
+          .where("uid", isEqualTo: otherUserUid)
+          .limit(1)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        DocumentReference otherUserRef = userQuery.docs.first.reference;
+
+        await otherUserRef.update({
+          "currentChat": null,
+          "matchable": true,
+        });
+        print("Other user ($otherUserUid) is now matchable again.");
+      } else {
+        print("Error: Other user document not found in Firestore.");
+      }
+    } else {
+      print("Error: No other user found in the chat.");
+    }
+
+    print("User ${user.uid} left the chat and is matchable again.");
+
+    // Navigate back to chat home
+    Navigator.pop(context);
   }
-
-  print("User ${user.uid} left the chat and is matchable again.");
-
-  // Navigate back to chat home
-  Navigator.pop(context);
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +125,8 @@ void _leaveChat() async {
         title: Text('Chat', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 1,
+        automaticallyImplyLeading:
+            false, // 🔹 This removes the default back button
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app, color: Colors.black),
