@@ -9,6 +9,8 @@ class ChatHomeScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  static const routeName = '/chathome';  
+
   ChatHomeScreen({super.key});
 
   void _signOut(BuildContext context) async {
