@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:gemo/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
+   static const routeName = '/signin';
   final VoidCallback toggleScreen;
   const SignInScreen({super.key, required this.toggleScreen});
 
   @override
-  _SignInScreenState createState() => _SignInScreenState();
+  SignInScreenState createState() => SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();

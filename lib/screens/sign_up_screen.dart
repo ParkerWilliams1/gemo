@@ -3,14 +3,15 @@ import 'package:gemo/auth_service.dart';
 
 
 class SignUpScreen extends StatefulWidget {
+  static const routeName = '/signup';
   final VoidCallback toggleScreen;
   const SignUpScreen({super.key, required this.toggleScreen});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  SignUpScreenState createState() => SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -20,6 +21,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String password = _passwordController.text.trim();
     if (email.isNotEmpty && password.isNotEmpty) {
       String? error = await _authService.signUp(email, password);
+      if (!mounted) return; 
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
       } else {
