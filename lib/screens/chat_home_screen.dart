@@ -9,7 +9,7 @@ class ChatHomeScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static const routeName = '/chathome';  
+  static const routeName = '/chathome';
 
   ChatHomeScreen({super.key});
 
@@ -95,6 +95,16 @@ class ChatHomeScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
+          // Background image
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/images/HomeScreen.png'),
+                fit: BoxFit.cover, // Cover the entire screen
+              ),
+            ),
+          ),
+          // Chat text
           const Align(
             alignment: Alignment.topCenter,
             child: Padding(
@@ -110,6 +120,7 @@ class ChatHomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          // New Chat Button
           Positioned(
             left: 78,
             top: 405,
@@ -136,6 +147,7 @@ class ChatHomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          // Logout button
           Positioned(
             right: 20,
             top: 50,

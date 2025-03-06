@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gemo/auth_service.dart';
 import 'package:gemo/screens/home_screen.dart';
@@ -36,41 +37,214 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Sign In to Your Gemo Account',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      body: Stack(
+        children: [
+          // Background Image
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/images/background.png'),
+                fit: BoxFit.cover,
               ),
-              const SizedBox(height: 20),
-              TextField(
+            ),
+          ),
+          // Welcome Back Text
+          const Positioned(
+            left: 87,
+            top: 140,
+            child: Text(
+              'Welcome Back!',
+              style: TextStyle(
+                color: Color(0xFF707070),
+                fontSize: 30,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          // White Card Container
+          Positioned(
+            left: 63,
+            top: 287,
+            child: Container(
+              width: 277,
+              height: 338,
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          // Sign-In Title
+          const Positioned(
+            left: 89,
+            top: 330,
+            child: Text(
+              'Sign In to Your Gemo Account',
+              style: TextStyle(
+                color: Color(0xFF707070),
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          // Email Label
+          const Positioned(
+            left: 93,
+            top: 384,
+            child: Text(
+              'Email',
+              style: TextStyle(
+                color: Color(0xFF707070),
+                fontSize: 12,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          // Email Input Field
+          Positioned(
+            left: 78,
+            top: 392,
+            child: Container(
+              width: 247,
+              height: 43,
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: "Email"),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
               ),
-              const SizedBox(height: 10),
-              TextField(
+            ),
+          ),
+          // Password Label
+          const Positioned(
+            left: 93,
+            top: 448,
+            child: Text(
+              'Password',
+              style: TextStyle(
+                color: Color(0xFF707070),
+                fontSize: 12,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          // Password Input Field
+          Positioned(
+            left: 78,
+            top: 456,
+            child: Container(
+              width: 247,
+              height: 43,
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: "Password"),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _signIn,
-                child: const Text("Sign In"),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, SignUpScreen.routeName);
-                },
-                child: const Text("Don't have an account? Sign Up"),
-              ),
-            ],
+            ),
           ),
-        ),
+          // Forgot Password Text
+          const Positioned(
+            left: 232,
+            top: 504,
+            child: Text(
+              'Forgot Password?',
+              style: TextStyle(
+                color: Color(0xFF83B9FF),
+                fontSize: 10,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          // Sign-In Button
+          Positioned(
+            left: 78,
+            top: 528,
+            child: GestureDetector(
+              onTap: _signIn,
+              child: Container(
+                width: 247,
+                height: 55,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFF83B9FF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Sign In',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Sign-Up Link
+          Positioned(
+            left: 110,
+            top: 600,
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  const TextSpan(
+                    text: "Don't have an account? ",
+                    style: TextStyle(
+                      color: Color(0xFF707070),
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'Sign Up',
+                    style: const TextStyle(
+                      color: Color(0xFF83B9FF),
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.pushReplacementNamed(context, SignUpScreen.routeName);
+                      },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
