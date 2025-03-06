@@ -16,10 +16,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+  String? _emailError;
 
   void _signUp() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
+
+    // Email must end in .edu
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email)) {
+      setState(() {
+        _emailError = "Please enter a valid .edu email address";
+      });
+      return;
+    } else {
+      setState(() {
+        _emailError = null;
+      });
+    }
 
     if (email.isNotEmpty && password.isNotEmpty) {
       String? error = await _authService.signUp(email, password);
@@ -83,36 +96,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // Email Field Container
-          Positioned(
-            left: 78,
-            top: 392,
-            child: Container(
-              width: 247,
-              height: 43,
-              decoration: ShapeDecoration(
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          // Password Field Container
-          Positioned(
-            left: 78,
-            top: 456,
-            child: Container(
-              width: 247,
-              height: 43,
-              decoration: ShapeDecoration(
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
           // Email Label
           const Positioned(
             left: 93,
@@ -125,6 +108,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
               ),
+            ),
+          ),
+          // Email Input Field
+          Positioned(
+            left: 78,
+            top: 392,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 247,
+                  height: 43,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      errorText: _emailError, // Show error message if email is invalid
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           // Password Label
@@ -141,29 +152,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // Email Input Field
-          Positioned(
-            left: 89,
-            top: 392,
-            child: SizedBox(
-              width: 230,
-              height: 40,
-              child: TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                ),
-              ),
-            ),
-          ),
           // Password Input Field
           Positioned(
-            left: 89,
+            left: 78,
             top: 456,
-            child: SizedBox(
-              width: 230,
-              height: 40,
+            child: Container(
+              width: 247,
+              height: 43,
+              decoration: ShapeDecoration(
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: TextField(
                 controller: _passwordController,
                 obscureText: true,
