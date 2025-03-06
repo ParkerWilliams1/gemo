@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
-import 'package:gemo/screens/groups_screen.dart';
+import 'package:gemo/screens/categories_screen.dart';
 import 'package:gemo/screens/menu_screen.dart'; // Import MenuScreen
 
 class ChatHomeScreen extends StatelessWidget {

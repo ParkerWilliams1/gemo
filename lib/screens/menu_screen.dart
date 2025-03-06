@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gemo/auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gemo/screens/my_chats_screen.dart'; // Import MyChatsScreen
+import 'package:gemo/screens/profile_screen.dart'; // Import ProfileScreen
+import 'package:gemo/screens/settings_screen.dart'; // Import SettingsScreen
 
 class MenuScreen extends StatelessWidget {
-  MenuScreen({super.key});
-
-  final AuthService _authService = AuthService(); // Instance of AuthService
-
-  void _signOut(BuildContext context) async {
-    await _authService.signOut();
-    Navigator.of(context).popUntil((route) => route.isFirst); // Navigate back to login
-  }
+  const MenuScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +23,9 @@ class MenuScreen extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 28),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 28),
           onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous screen
+            Navigator.pop(context);
           },
         ),
       ),
@@ -40,29 +34,57 @@ class MenuScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             _buildMenuButton(
               icon: Icons.groups_outlined,
               label: 'My Chats',
-              onPressed: () {},
+              onPressed: () {
+                print("Navigating to My Chats...");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MyChatsScreen()),
+                );
+              },
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             _buildMenuButton(
               icon: Icons.person_outline_outlined,
               label: 'Profile',
-              onPressed: () {},
+              onPressed: () {
+                print("Navigating to Profile...");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(
+                      firstName: "Grace",
+                      lastName: "Bergquist",
+                      major: "Computer Science",
+                      subjects: "Math, Physics",
+                      username: "graceb",
+                      email: "grace@example.com",
+                      password: "password123",
+                    ),
+                  ),
+                );
+              },
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             _buildMenuButton(
               icon: Icons.settings_outlined,
               label: 'Settings',
-              onPressed: () {},
+              onPressed: () {
+                print("Navigating to Settings...");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
+              },
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             _buildMenuButton(
               icon: Icons.logout,
               label: 'Logout',
-              onPressed: () => _signOut(context), // Calls the logout function
+              onPressed: () {}, // Implement logout function here
             ),
           ],
         ),
