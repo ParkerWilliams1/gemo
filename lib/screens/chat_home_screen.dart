@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gemo/auth_service.dart';
+import 'package:gemo/services/auth_service.dart';
 
 class ChatHomeScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
