@@ -1,9 +1,12 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gemo/auth_service.dart';
+import 'package:gemo/screens/sign_in_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
-  final VoidCallback toggleScreen;
-  const SignUpScreen({super.key, required this.toggleScreen});
+  static const routeName = '/signup';
+
+  const SignUpScreen({super.key});
 
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
@@ -17,6 +20,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _signUp() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
+
     if (email.isNotEmpty && password.isNotEmpty) {
       String? error = await _authService.signUp(email, password);
       if (error != null) {
@@ -33,157 +37,204 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          // Background Image
           Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.white, // Ensuring plain white background
-          ),
-          Center(
-            child: Container(
-              width: 402,
-              height: 874,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/images/background.png'),
+                fit: BoxFit.cover,
               ),
-              child: Stack(
+            ),
+          ),
+          // App Icon
+          Positioned(
+            left: 145,
+            top: 164,
+            child: Container(
+              width: 114,
+              height: 114,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('lib/images/gemo.png'),
+                  fit: BoxFit.fill,
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.25),
+                    blurRadius: 4,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+            ),
+          ),
+          // Welcome Text
+          const Positioned(
+            left: 84,
+            top: 297,
+            child: Text(
+              'Welcome!',
+              style: TextStyle(
+                color: Color(0xFF707070),
+                fontSize: 48,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          // Email Field Container
+          Positioned(
+            left: 78,
+            top: 392,
+            child: Container(
+              width: 247,
+              height: 43,
+              decoration: ShapeDecoration(
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          // Password Field Container
+          Positioned(
+            left: 78,
+            top: 456,
+            child: Container(
+              width: 247,
+              height: 43,
+              decoration: ShapeDecoration(
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          // Email Label
+          const Positioned(
+            left: 93,
+            top: 384,
+            child: Text(
+              'Email',
+              style: TextStyle(
+                color: Color(0xFF707070),
+                fontSize: 12,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          // Password Label
+          const Positioned(
+            left: 93,
+            top: 448,
+            child: Text(
+              'Password',
+              style: TextStyle(
+                color: Color(0xFF707070),
+                fontSize: 12,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          // Email Input Field
+          Positioned(
+            left: 89,
+            top: 392,
+            child: SizedBox(
+              width: 230,
+              height: 40,
+              child: TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
+              ),
+            ),
+          ),
+          // Password Input Field
+          Positioned(
+            left: 89,
+            top: 456,
+            child: SizedBox(
+              width: 230,
+              height: 40,
+              child: TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
+              ),
+            ),
+          ),
+          // Sign Up Button Container
+          Positioned(
+            left: 78,
+            top: 528,
+            child: GestureDetector(
+              onTap: _signUp,
+              child: Container(
+                width: 247,
+                height: 55,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFF83B9FF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // "Already have an account?" Text
+          Positioned(
+            left: 108,
+            top: 596,
+            child: RichText(
+              text: TextSpan(
                 children: [
-                  Positioned.fill(
-                    child: Image.asset(
-                      "lib/images/background.png",
-                      fit: BoxFit.cover,
+                  const TextSpan(
+                    text: 'Already have an account?',
+                    style: TextStyle(
+                      color: Color(0xFF707070),
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  Positioned(
-                    left: 78,
-                    top: 528,
-                    child: GestureDetector(
-                      onTap: _signUp,
-                      child: Container(
-                        width: 247,
-                        height: 55,
-                        decoration: ShapeDecoration(
-                          color: const Color(0xFF83B9FF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  const TextSpan(
+                    text: ' ',
                   ),
-                  Positioned(
-                    left: 78,
-                    top: 392,
-                    child: SizedBox(
-                      width: 247,
-                      child: TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: "Email",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
+                  TextSpan(
+                    text: 'Log in',
+                    style: const TextStyle(
+                      color: Color(0xFF83B9FF),
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline,
                     ),
-                  ),
-                  Positioned(
-                    left: 78,
-                    top: 456,
-                    child: SizedBox(
-                      width: 247,
-                      child: TextField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: "Password",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Positioned(
-                    left: 84,
-                    top: 297,
-                    child: Text(
-                      'Welcome!',
-                      style: TextStyle(
-                        color: Color(0xFF707070),
-                        fontSize: 48,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 108,
-                    top: 596,
-                    child: GestureDetector(
-                      onTap: widget.toggleScreen,
-                      child: const Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Already have an account?',
-                              style: TextStyle(
-                                color: Color(0xFF707070),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' ',
-                            ),
-                            TextSpan(
-                              text: 'Log in',
-                              style: TextStyle(
-                                color: Color(0xFF83B9FF),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 145,
-                    top: 164,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(25),
-                        child: Image.asset(
-                          'lib/images/gemo.png', // Local image with shadow
-                          width: 114,
-                          height: 114,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+                      },
                   ),
                 ],
               ),
