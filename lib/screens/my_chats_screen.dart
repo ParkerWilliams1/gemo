@@ -7,127 +7,155 @@ class MyChatsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: const Text(
-          'My Chats',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
+      body: Stack(
+        children: [
+          // Top Bar Background
+          Positioned(
+            left: -36,
+            top: -33,
+            child: Container(
+              width: 473,
+              height: 136,
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                ),
+              ),
+            ),
           ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous screen
-          },
-        ),
+          // Back Button
+          Positioned(
+            left: 20,
+            top: 50,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+          // Title: My Chats
+          const Positioned(
+            left: 137,
+            top: 61,
+            child: Text(
+              'My Chats',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          // Recent Chats Section
+          _sectionTitle("Recent Chats", 141),
+          _chatBox(33, 196, "Hot Takes"),
+          _chatBox(183, 196, "Basketball"),
+          _chatBox(333, 196, "Calculus"),
+
+          // Favorite Categories Section
+          _sectionTitle("Favorite Categories", 324),
+          _chatBox(33, 379, "Video Games"),
+          _chatBox(183, 379, "Sports"),
+          _chatBox(333, 379, "Chess"),
+
+          // My Tutors Section
+          _sectionTitle("My Tutors", 507),
+          _tutorBox(33, 551, "Jeremy", "Physics"),
+          _tutorBox(183, 551, "Sophia", "Calculus"),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Recent Chats",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 15),
-            _chatBox("Hot Takes"),
-            _chatBox("Basketball"),
-            _chatBox("Calculus"),
-            const SizedBox(height: 20),
-            const Text(
-              "Favorite Categories",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 15),
-            _chatBox("Video Games"),
-            _chatBox("Sports"),
-            _chatBox("Chess"),
-            const SizedBox(height: 20),
-            const Text(
-              "My Tutors",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 15),
-            _tutorBox("Jeremy", "Physics"),
-            _tutorBox("Sophia", "Calculus"),
-          ],
+    );
+  }
+
+  // Section Title Widget
+  Widget _sectionTitle(String title, double top) {
+    return Positioned(
+      left: 23,
+      top: top,
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
   }
 
   // Chat Box Widget
-  Widget _chatBox(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        width: double.infinity,
-        height: 80,
-        decoration: BoxDecoration(
-          color: const Color(0xFFD9D9D9),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Text(
+  Widget _chatBox(double left, double top, String label) {
+    return Positioned(
+      left: left,
+      top: top,
+      child: Column(
+        children: [
+          Container(
+            width: 132,
+            height: 102,
+            decoration: ShapeDecoration(
+              color: const Color(0xFFD9D9D9),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
             label,
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 18,
+              fontSize: 14,
+              fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   // Tutor Box Widget
-  Widget _tutorBox(String name, String subject) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        width: double.infinity,
-        height: 80,
-        decoration: BoxDecoration(
-          color: const Color(0xFFD9D9D9),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ListTile(
-          leading: const Icon(Icons.person, size: 40, color: Colors.black),
-          title: Text(
+  Widget _tutorBox(double left, double top, String name, String subject) {
+    return Positioned(
+      left: left,
+      top: top,
+      child: Column(
+        children: [
+          Container(
+            width: 132,
+            height: 57,
+            decoration: ShapeDecoration(
+              color: const Color(0xFFD9D9D9),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
             name,
             style: const TextStyle(
               color: Colors.black,
               fontSize: 18,
+              fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
             ),
           ),
-          subtitle: Text(
+          Text(
             subject,
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 14,
+              fontSize: 10,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
