@@ -1,7 +1,35 @@
+/*
+    profile_screen.dart
+    February 18, 2025
+    Grace Bergquist
+    This file contains the logic for the profile screen, where users can view and edit their profile information.
+    
+    Functions:
+    - ProfileScreen: Constructor for the ProfileScreen class
+    - _ProfileScreenState: State class for the ProfileScreen
+    - initState: Initializes the state of the ProfileScreen
+    - _saveAndReturn: Saves the profile information and returns to the previous screen
+    - build: Builds the profile screen with the specified layout and design
+    - _buildProfileField: Builds a profile field with a label and text field
+
+    Variables Accessed by Module:
+    - firstName: The user's first name
+    - lastName: The user's last name
+    - major: The user's major
+    - subjects: The subjects the user tutors
+    - username: The user's username
+    - email: The user's email
+    - password: The user's password
+
+    History of Modifications:
+    - N/A
+*/
+
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
-  static const routeName = '/profile';  
+  static const routeName = '/profile';
+  
   final String firstName;
   final String lastName;
   final String major;

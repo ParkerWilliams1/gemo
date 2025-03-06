@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'sign_in_screen.dart';
+import 'package:gemo/screens/sign_in_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   static const routeName = '/splash';
@@ -13,16 +13,15 @@ class SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToHome();
+    _navigateToSignIn();
   }
 
-  _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 3), () {});
+  _navigateToSignIn() async {
+    await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
-      Navigator.pushReplacement(context, 
-        MaterialPageRoute(builder: (context) => SignInScreen(toggleScreen: (){},)),
-      );
+      // Navigate to the sign-in screen
+      Navigator.pushReplacementNamed(context, SignInScreen.routeName);
     }
   }
 
@@ -32,7 +31,6 @@ class SplashScreenState extends State<SplashScreen> {
       appBar: AppBar(
         title: const Text('Welcome to Gemo!'),
         centerTitle: true,
-        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
         backgroundColor: const Color.fromARGB(255, 225, 127, 0),
       ),
       body: Center(

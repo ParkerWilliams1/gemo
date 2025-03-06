@@ -24,9 +24,7 @@ class HomeScreenState extends State<HomeScreen> {
         if (snapshot.hasData) {
           return ChatHomeScreen();
         } else {
-          return showSignUp
-              ? SignUpScreen(toggleScreen: () => setState(() => showSignUp = false))
-              : SignInScreen(toggleScreen: () => setState(() => showSignUp = true));
+          return const SignInScreen();
         }
       },
     );

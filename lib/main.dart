@@ -3,8 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
-// import 'screens/chat_home_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/chat_home_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/sign_up_screen.dart';
 
@@ -31,14 +30,9 @@ class MyApp extends StatelessWidget {
       routes: {
         SplashScreen.routeName: (context) => const SplashScreen(),
         HomeScreen.routeName: (context) => const HomeScreen(),
-        // ChatHomeScreen.routeName: (context) => ChatHomeScreen(),
-        ProfileScreen.routeName: (context) => const ProfileScreen(),
-        SignInScreen.routeName: (context) => SignInScreen(toggleScreen: () {
-              Navigator.pushReplacementNamed(context, SignUpScreen.routeName);
-            }),
-        SignUpScreen.routeName: (context) => SignUpScreen(toggleScreen: () {
-              Navigator.pushReplacementNamed(context, SignInScreen.routeName);
-            }),
+        ChatHomeScreen.routeName: (context) => ChatHomeScreen(),
+        SignInScreen.routeName: (context) => const SignInScreen(),
+        SignUpScreen.routeName: (context) => const SignUpScreen(),
       },
     );
   }
