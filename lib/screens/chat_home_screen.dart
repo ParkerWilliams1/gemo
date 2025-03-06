@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
+import 'package:gemo/screens/groups_screen.dart';
+import 'package:gemo/screens/menu_screen.dart'; // Import MenuScreen
 
 class ChatHomeScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
@@ -12,10 +14,6 @@ class ChatHomeScreen extends StatelessWidget {
   static const routeName = '/chathome';
 
   ChatHomeScreen({super.key});
-
-  void _signOut(BuildContext context) async {
-    await _authService.signOut();
-  }
 
   // Function to start a new chat with a randomly matched user
   void _startNewChat(BuildContext context) async {
@@ -147,13 +145,50 @@ class ChatHomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Logout button
+          // Browse Categories Button
+          Positioned(
+            left: 78,
+            top: 510, // Positioned below the "New Chat" button
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => GroupsScreen()),
+                );
+              },
+              child: Container(
+                width: 247,
+                height: 91,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF83B9FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Browse Categories',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Menu Button (Replaces Logout Button)
           Positioned(
             right: 20,
             top: 50,
             child: IconButton(
-              icon: const Icon(Icons.logout, size: 30, color: Colors.black),
-              onPressed: () => _signOut(context),
+              icon: const Icon(Icons.menu, size: 30, color: Colors.black),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MenuScreen()),
+                );
+              },
             ),
           ),
         ],
