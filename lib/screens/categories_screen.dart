@@ -151,7 +151,7 @@ class GroupsScreen extends StatelessWidget {
 class CategoryTile extends StatelessWidget {
   final String title;
 
-  const CategoryTile({required this.title});
+  const CategoryTile({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

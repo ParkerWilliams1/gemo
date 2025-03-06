@@ -5,7 +5,6 @@ import 'package:gemo/screens/sign_in_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const routeName = '/signup';
-
   const SignUpScreen({super.key});
 
   @override
@@ -53,7 +52,7 @@ class SignUpScreenState extends State<SignUpScreen> {
         children: [
           // Background Image
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('lib/images/background.png'),
                 fit: BoxFit.cover,
@@ -68,14 +67,14 @@ class SignUpScreenState extends State<SignUpScreen> {
               width: 114,
               height: 114,
               decoration: BoxDecoration(
-                image: DecorationImage(
+                image: const DecorationImage(
                   image: AssetImage('lib/images/gemo.png'),
                   fit: BoxFit.fill,
                 ),
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withAlpha(64),
                     blurRadius: 4,
                     offset: const Offset(0, 4),
                   )
@@ -123,7 +122,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                   height: 43,
                   decoration: ShapeDecoration(
                     shape: RoundedRectangleBorder(
-                      side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                      side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
@@ -131,7 +130,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                     controller: _emailController,
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       errorText: _emailError, // Show error message if email is invalid
                     ),
                   ),
@@ -162,7 +161,7 @@ class SignUpScreenState extends State<SignUpScreen> {
               height: 43,
               decoration: ShapeDecoration(
                 shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),

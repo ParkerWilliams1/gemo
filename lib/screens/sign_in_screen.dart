@@ -5,7 +5,7 @@ import 'package:gemo/screens/home_screen.dart';
 import 'package:gemo/screens/sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
-   static const routeName = '/signin';
+  static const routeName = '/signin';
 
   const SignInScreen({super.key});
 
@@ -26,10 +26,13 @@ class SignInScreenState extends State<SignInScreen> {
       String? error = await _authService.signIn(email, password);
 
       if (error != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error)));
       } else {
         // Navigate to HomeScreen upon successful login
-        Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+        }
       }
     }
   }
@@ -41,7 +44,7 @@ class SignInScreenState extends State<SignInScreen> {
         children: [
           // Background Image
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('lib/images/background.png'),
                 fit: BoxFit.cover,
@@ -72,7 +75,7 @@ class SignInScreenState extends State<SignInScreen> {
               decoration: ShapeDecoration(
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -116,7 +119,7 @@ class SignInScreenState extends State<SignInScreen> {
               decoration: ShapeDecoration(
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -124,7 +127,8 @@ class SignInScreenState extends State<SignInScreen> {
                 controller: _emailController,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
             ),
@@ -153,7 +157,7 @@ class SignInScreenState extends State<SignInScreen> {
               decoration: ShapeDecoration(
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -162,7 +166,8 @@ class SignInScreenState extends State<SignInScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
             ),
@@ -237,7 +242,8 @@ class SignInScreenState extends State<SignInScreen> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
-                        Navigator.pushReplacementNamed(context, SignUpScreen.routeName);
+                        Navigator.pushReplacementNamed(
+                            context, SignUpScreen.routeName);
                       },
                   ),
                 ],

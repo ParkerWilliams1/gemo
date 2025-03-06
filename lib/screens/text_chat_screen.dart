@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:logger/logger.dart';
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
-
-  ChatScreen({required this.chatId});
+  const ChatScreen({super.key, required this.chatId});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -39,7 +39,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _leaveChat() async {
     User? user = _auth.currentUser;
     if (user == null) {
-      print("No authenticated user found.");
+      Logger().e("No authenticated user found.");
       return;
     }
 
@@ -47,13 +47,13 @@ class _ChatScreenState extends State<ChatScreen> {
     DocumentSnapshot userDoc = await userRef.get();
 
     if (!userDoc.exists) {
-      print("Current user document not found in Firestore.");
+      Logger().e("Current user document not found in Firestore.");
       return;
     }
 
     String? currentChatId = userDoc['currentChat'];
     if (currentChatId == null) {
-      print("User is not currently in an active chat.");
+      Logger().e("User is not currently in an active chat.");
       return;
     }
 
@@ -62,23 +62,23 @@ class _ChatScreenState extends State<ChatScreen> {
     DocumentSnapshot chatDoc = await chatRef.get();
 
     if (!chatDoc.exists) {
-      print("Chat document not found in Firestore.");
+      Logger().e("Chat document not found in Firestore.");
       return;
     }
 
-    print("Chat found: ${chatDoc.data()}");
+    Logger().i("Chat found: ${chatDoc.data()}");
 
     List<dynamic> participants = chatDoc['participants'];
     if (participants.length < 2) {
-      print("Warning: Chat has less than 2 participants.");
+      Logger().w("Warning: Chat has less than 2 participants.");
     }
 
     // Find the other user in the chat
     String? otherUserUid =
         participants.firstWhere((id) => id != user.uid, orElse: () => null);
 
-    print("Current user ID: ${user.uid}");
-    print("Other user UID: $otherUserUid");
+    Logger().i("Current user ID: ${user.uid}");
+    Logger().i("Other user UID: $otherUserUid");
 
     // Update current user
     await userRef.update({
@@ -86,7 +86,7 @@ class _ChatScreenState extends State<ChatScreen> {
       "matchable": true,
     });
 
-    print("Current user ${user.uid} is now matchable again.");
+    Logger().i("Current user ${user.uid} is now matchable again.");
 
     // 🔹 Instead of using Firestore document ID, search for the other user by their `uid`
     if (otherUserUid != null) {
@@ -103,17 +103,18 @@ class _ChatScreenState extends State<ChatScreen> {
           "currentChat": null,
           "matchable": true,
         });
-        print("Other user ($otherUserUid) is now matchable again.");
+        Logger().i("Other user ($otherUserUid) is now matchable again.");
       } else {
-        print("Error: Other user document not found in Firestore.");
+        Logger().e("Error: Other user document not found in Firestore.");
       }
     } else {
-      print("Error: No other user found in the chat.");
+      Logger().e("Error: No other user found in the chat.");
     }
 
-    print("User ${user.uid} left the chat and is matchable again.");
+    Logger().i("User ${user.uid} left the chat and is matchable again.");
 
     // Navigate back to chat home
+    if (!mounted) return;
     Navigator.pop(context);
   }
 
@@ -217,7 +218,7 @@ class ChatBubble extends StatelessWidget {
   final String text;
   final bool isMe;
 
-  ChatBubble({required this.text, required this.isMe});
+  const ChatBubble({super.key, required this.text, required this.isMe});
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/my_chats_screen.dart'; // Import MyChatsScreen
 import 'package:gemo/screens/profile_screen.dart'; // Import ProfileScreen
 import 'package:gemo/screens/settings_screen.dart'; // Import SettingsScreen
+import 'package:logger/logger.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -39,7 +40,7 @@ class MenuScreen extends StatelessWidget {
               icon: Icons.groups_outlined,
               label: 'My Chats',
               onPressed: () {
-                print("Navigating to My Chats...");
+                Logger().i("Navigating to My Chats...");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const MyChatsScreen()),
@@ -51,7 +52,7 @@ class MenuScreen extends StatelessWidget {
               icon: Icons.person_outline_outlined,
               label: 'Profile',
               onPressed: () {
-                print("Navigating to Profile...");
+                Logger().i("Navigating to Profile...");
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -73,7 +74,7 @@ class MenuScreen extends StatelessWidget {
               icon: Icons.settings_outlined,
               label: 'Settings',
               onPressed: () {
-                print("Navigating to Settings...");
+                Logger().i("Navigating to Settings...");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SettingsScreen()),

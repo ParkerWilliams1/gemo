@@ -5,6 +5,7 @@ import 'package:gemo/services/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
 import 'package:gemo/screens/menu_screen.dart'; // Import MenuScreen
+import 'package:logger/logger.dart'; // Import logger package
 
 class ChatHomeScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
@@ -12,6 +13,7 @@ class ChatHomeScreen extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   static const routeName = '/chathome';
+  final Logger _logger = Logger(); // Initialize logger
 
   ChatHomeScreen({super.key});
 
@@ -19,7 +21,7 @@ class ChatHomeScreen extends StatelessWidget {
   void _startNewChat(BuildContext context) async {
     User? currentUser = _auth.currentUser;
     if (currentUser == null) {
-      print("No user is logged in.");
+      _logger.w("No user is logged in.");
       return;
     }
 
@@ -32,14 +34,14 @@ class ChatHomeScreen extends StatelessWidget {
 
       // If user is not matchable, reset them so they can be matched again
       if (!isMatchable) {
-        print("User was not matchable, resetting...");
+        _logger.w("User was not matchable, resetting...");
         await currentUserRef.update({
           "matchable": true,
         });
       }
     }
 
-    print("Searching for available users...");
+    _logger.w("Searching for available users...");
     QuerySnapshot usersSnapshot = await _firestore
         .collection('users')
         .where('matchable', isEqualTo: true)
@@ -48,7 +50,7 @@ class ChatHomeScreen extends StatelessWidget {
         .get();
 
     if (usersSnapshot.docs.isEmpty) {
-      print("No available users for matching.");
+      _logger.w("No available users for matching.");
       return;
     }
 
@@ -56,11 +58,11 @@ class ChatHomeScreen extends StatelessWidget {
     DocumentReference matchedUserRef =
         _firestore.collection('users').doc(usersSnapshot.docs.first.id);
 
-    print("Matched user found: $matchedUserUid");
+    _logger.w("Matched user found: $matchedUserUid");
 
     DocumentSnapshot matchedUserDoc = await matchedUserRef.get();
     if (!matchedUserDoc.exists) {
-      print("Error: Matched user document does not exist.");
+      _logger.w("Error: Matched user document does not exist.");
       return;
     }
 
@@ -80,9 +82,9 @@ class ChatHomeScreen extends StatelessWidget {
     await matchedUserRef
         .update({"currentChat": newChatRef.id, "matchable": false});
 
-    print("Chat successfully created! Navigating to chat screen...");
-    Navigator.push(
-      context,
+    if (!context.mounted) return;
+    _logger.i("Chat successfully created! Navigating to chat screen...");
+    Navigator.of(context).push(
       MaterialPageRoute(
           builder: (context) => ChatScreen(chatId: newChatRef.id)),
     );
@@ -95,7 +97,7 @@ class ChatHomeScreen extends StatelessWidget {
         children: [
           // Background image
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('lib/images/HomeScreen.png'),
                 fit: BoxFit.cover, // Cover the entire screen
