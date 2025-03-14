@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:gemo/services/auth_service.dart';
+// import 'package:gemo/services/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
 import 'package:gemo/screens/menu_screen.dart'; // Import MenuScreen
 import 'package:logger/logger.dart'; // Import logger package
 
 class ChatHomeScreen extends StatelessWidget {
-  final AuthService _authService = AuthService();
+  // final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 

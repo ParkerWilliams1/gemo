@@ -11,6 +11,18 @@ class MatchmakingService with ChangeNotifier {
     _tryMatch();
   }
 
+  void leaveQueue(String userId) {
+    _queue.remove(userId);
+    notifyListeners();
+  }
+
+  void endCall(String userId1, String userId2) {
+    _matches.removeWhere((match) => match['user1'] == userId1 && match['user2'] == userId2);
+    _queue.add(userId1);
+    _queue.add(userId2);
+    _tryMatch();
+  }
+
   void _tryMatch() {
     while (_queue.length >= 2) {
       final user1 = _queue.removeAt(0);

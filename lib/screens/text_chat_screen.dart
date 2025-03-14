@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logger/logger.dart';
+import 'package:gemo/services/user_matching.dart';
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
@@ -15,6 +16,7 @@ class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final MatchmakingService _matchmakingService = MatchmakingService();
 
   void _sendMessage() async {
     String messageText = _messageController.text.trim();
@@ -112,6 +114,9 @@ class ChatScreenState extends State<ChatScreen> {
     }
 
     Logger().i("User ${user.uid} left the chat and is matchable again.");
+
+        // Rejoin the matchmaking queue
+    _matchmakingService.joinQueue(user.uid);
 
     // Navigate back to chat home
     if (!mounted) return;
