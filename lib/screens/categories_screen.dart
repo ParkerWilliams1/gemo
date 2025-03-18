@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/menu_screen.dart'; // Import MenuScreen
 
-class GroupsScreen extends StatelessWidget {
-  GroupsScreen({super.key});
+class CategoriesScreen extends StatelessWidget {
+  CategoriesScreen({super.key});
   
   final List<Map<String, dynamic>> categories = [
     {"title": "Pop"},

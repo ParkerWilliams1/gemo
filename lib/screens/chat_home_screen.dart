@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/waiting_for_match_screen.dart';
+import 'package:gemo/screens/categories_screen.dart'; // ✅ Updated to CategoriesScreen
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
@@ -28,25 +29,13 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       return;
     }
 
-    DocumentReference currentUserRef =
-        _firestore.collection('users').doc(currentUser.uid);
-
-    // 🔹 Step 1: Reset old chat before searching for a match
-    await currentUserRef.update({"currentChat": null, "matchable": true});
-
-    print("🔄 Reset current user’s chat status.");
-
-    DocumentReference queueRef =
-        _firestore.collection('chat_queue').doc('waiting_user');
+    DocumentReference queueRef = _firestore.collection('chat_queue').doc('waiting_user');
     DocumentSnapshot queueDoc = await queueRef.get();
 
     if (queueDoc.exists && queueDoc['uid'] != currentUser.uid) {
-      // 🔹 Step 2: A match is found; create a new chat
       String matchedUserUid = queueDoc['uid'];
-      DocumentReference matchedUserRef =
-          _firestore.collection('users').doc(matchedUserUid);
-
       var newChatRef = _firestore.collection('chats').doc();
+
       await newChatRef.set({
         "participants": [currentUser.uid, matchedUserUid],
         "createdAt": FieldValue.serverTimestamp(),
@@ -55,19 +44,18 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
       print("✅ New chat created: ${newChatRef.id}");
 
-      // 🔹 Step 3: Assign both users to the same chat
-      await currentUserRef
-          .update({"currentChat": newChatRef.id, "matchable": false});
+      await _firestore.collection('users').doc(currentUser.uid).update({
+        "currentChat": newChatRef.id,
+        "matchable": false
+      });
 
-      await matchedUserRef
-          .update({"currentChat": newChatRef.id, "matchable": false});
+      await _firestore.collection('users').doc(matchedUserUid).update({
+        "currentChat": newChatRef.id,
+        "matchable": false
+      });
 
-      // 🔹 Step 4: Remove the waiting user from the queue
       await queueRef.delete();
-
-      print("🔄 Match complete! Both users are in the same chat.");
     } else {
-      // 🔹 No available match; add the user to the queue
       print("🔄 No match found, adding user to queue...");
       await queueRef.set({"uid": currentUser.uid});
     }
@@ -79,11 +67,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     User? currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    _firestore
-        .collection('users')
-        .doc(currentUser.uid)
-        .snapshots()
-        .listen((doc) {
+    _firestore.collection('users').doc(currentUser.uid).snapshots().listen((doc) {
       if (doc.exists && doc.data()?['currentChat'] != null) {
         String chatId = doc.data()?['currentChat'];
         if (chatId.isNotEmpty && chatId != _currentChatId) {
@@ -134,6 +118,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
               ),
             ),
           ),
+          // New Chat Button
           Positioned(
             left: 78,
             top: 405,
@@ -154,6 +139,38 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                       fontSize: 24,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Browse Categories Button (Smaller & Light Gray)
+          Positioned(
+            left: 120, // Centered below "New Chat"
+            top: 510, // Below "New Chat" button
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CategoriesScreen()), // ✅ Corrected navigation
+                );
+              },
+              child: Container(
+                width: 180,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300], // ✅ Light gray background
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Browse Categories',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
