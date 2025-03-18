@@ -3,7 +3,7 @@ import 'package:gemo/auth_service.dart';
 
 class ChatHomeScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
-
+  var schoolColor = Colors.white;
   ChatHomeScreen({super.key});
 
   void _signOut(BuildContext context) async {
@@ -17,7 +17,7 @@ class ChatHomeScreen extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Colors.blue, // Here is where I will replace the color with the users school color
           image: DecorationImage(
             image: AssetImage('assets/HomeScreen.png'), // Background Image
             fit: BoxFit.cover,
