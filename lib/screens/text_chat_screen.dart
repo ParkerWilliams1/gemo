@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logger/logger.dart';
 import 'package:gemo/services/user_matching.dart';
 
+
 class ChatScreen extends StatefulWidget {
   final String chatId;
   const ChatScreen({super.key, required this.chatId});
@@ -16,6 +17,7 @@ class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final MatchmakingService _matchmakingService = MatchmakingService();
 
   String _participantName = "Chat"; // Default title
 
@@ -70,9 +72,9 @@ class ChatScreenState extends State<ChatScreen> {
         "timestamp": FieldValue.serverTimestamp(),
       });
 
-      print("Message sent: $messageText");
+      Logger().i("Message sent: $messageText");
     } catch (e) {
-      print("Error sending message: $e");
+      Logger().e("Error sending message: $e");
     }
 
     _messageController.clear();
@@ -96,7 +98,7 @@ class ChatScreenState extends State<ChatScreen> {
 
     String? currentChatId = userDoc['currentChat'];
     if (currentChatId == null) {
-      print("User is not currently in an active chat.");
+      Logger().w("User is not currently in an active chat.");
       return;
     }
 
@@ -109,19 +111,19 @@ class ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    print("Chat found: ${chatDoc.data()}");
+    Logger().i("Chat found: ${chatDoc.data()}");
 
     List<dynamic> participants = chatDoc['participants'];
     if (participants.length < 2) {
-      print("Warning: Chat has less than 2 participants.");
+      Logger().w("Warning: Chat has less than 2 participants.");
     }
 
     // Find the other user in the chat
     String? otherUserUid =
         participants.firstWhere((id) => id != user.uid, orElse: () => null);
 
-    print("Current user ID: ${user.uid}");
-    print("Other user UID: $otherUserUid");
+    Logger().i("Current user ID: ${user.uid}");
+    Logger().i("Other user UID: $otherUserUid");
 
     // Update current user
     await userRef.update({
@@ -138,7 +140,7 @@ class ChatScreenState extends State<ChatScreen> {
         "currentChat": null,
         "matchable": true,
       });
-      print("Other user ($otherUserUid) is now matchable again.");
+      Logger().i("Other user ($otherUserUid) is now matchable again.");
     }
 
     // Remove user from chat participants
@@ -148,7 +150,7 @@ class ChatScreenState extends State<ChatScreen> {
 
     Logger().i("User ${user.uid} left the chat and is matchable again.");
 
-        // Rejoin the matchmaking queue
+    // Rejoin the matchmaking queue
     _matchmakingService.joinQueue(user.uid);
 
     // Navigate back to chat home
