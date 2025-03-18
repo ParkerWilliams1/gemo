@@ -1,105 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:gemo/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
-import 'package:gemo/screens/categories_screen.dart';
-import 'package:gemo/screens/menu_screen.dart';
 
-class ChatHomeScreen extends StatelessWidget {
-  final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class ChatHomeScreen extends StatefulWidget {
+  static const String routeName = '/chathome'; // ✅ Add this line
+
+  @override
+  _ChatHomeScreenState createState() => _ChatHomeScreenState();
+}
+
+class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String? _currentChatId;
 
-  static const routeName = '/chathome';
+  @override
+  void initState() {
+    super.initState();
+    _listenForChatUpdates();
+  }
 
-  ChatHomeScreen({super.key});
+  void _listenForChatUpdates() {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) return;
 
-  // Function to start a new chat with a randomly matched user
-  void _startNewChat(BuildContext context) async {
+    _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .snapshots()
+        .listen((doc) {
+      if (doc.exists && doc.data()?['currentChat'] != null) {
+        String chatId = doc.data()?['currentChat'];
+        if (chatId.isNotEmpty && chatId != _currentChatId) {
+          _currentChatId = chatId;
+          _navigateToChatScreen(chatId);
+        }
+      }
+    });
+  }
+
+  void _navigateToChatScreen(String chatId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChatScreen(chatId: chatId)),
+    );
+  }
+
+  void _startNewChat() async {
     try {
-      // 🔹 Step 1: Verify Authentication
       User? currentUser = _auth.currentUser;
       if (currentUser == null) {
         print("🚨 ERROR: No user is logged in.");
         return;
       }
 
-      print("🔍 Searching for available users...");
-      print("👤 Current user: ${currentUser.uid}");
+      print("🔍 Checking for available match...");
+      DocumentReference queueRef =
+          _firestore.collection('chat_queue').doc('waiting_user');
+      DocumentSnapshot queueDoc = await queueRef.get();
 
-      // 🔹 Step 2: Get Current User Data from Firestore
-      DocumentReference currentUserRef =
-          _firestore.collection('users').doc(currentUser.uid);
-      DocumentSnapshot currentUserDoc = await currentUserRef.get();
+      if (queueDoc.exists && queueDoc['uid'] != currentUser.uid) {
+        // 🔹 Match found, create a chat
+        String matchedUserUid = queueDoc['uid'];
 
-      if (!currentUserDoc.exists) {
-        print("🚨 ERROR: Current user document does not exist in Firestore.");
-        return;
+        var newChatRef = _firestore.collection('chats').doc();
+        await newChatRef.set({
+          "participants": [currentUser.uid, matchedUserUid],
+          "createdAt": FieldValue.serverTimestamp(),
+          "chatStatus": "active"
+        });
+
+        print("✅ Chat created: ${newChatRef.id}");
+
+        // 🔹 Update users
+        await _firestore
+            .collection('users')
+            .doc(currentUser.uid)
+            .update({"currentChat": newChatRef.id, "matchable": false});
+
+        await _firestore
+            .collection('users')
+            .doc(matchedUserUid)
+            .update({"currentChat": newChatRef.id, "matchable": false});
+
+        // 🔹 Clear queue
+        await queueRef.delete();
+      } else {
+        // No one available, add user to queue
+        print("🔄 No match found, adding user to queue...");
+        await queueRef.set({"uid": currentUser.uid});
       }
-
-      bool isMatchable = currentUserDoc["matchable"] ?? false;
-      if (!isMatchable) {
-        print("🔄 User was not matchable, resetting...");
-        await currentUserRef.update({"matchable": true});
-      }
-
-      // 🔹 Step 3: Query for an Available Match
-      QuerySnapshot usersSnapshot = await _firestore
-          .collection('users')
-          .where('matchable', isEqualTo: true)
-          .where('uid', isNotEqualTo: currentUser.uid)
-          .limit(1)
-          .get();
-
-      if (usersSnapshot.docs.isEmpty) {
-        print("❌ No available users for matching.");
-        return;
-      }
-
-      // 🔹 Step 4: Select Matched User
-      String matchedUserUid = usersSnapshot.docs.first['uid'];
-      DocumentReference matchedUserRef =
-          _firestore.collection('users').doc(matchedUserUid);
-
-      print("✅ Matched user found: $matchedUserUid");
-
-      DocumentSnapshot matchedUserDoc = await matchedUserRef.get();
-      if (!matchedUserDoc.exists) {
-        print("🚨 ERROR: Matched user document does not exist in Firestore.");
-        return;
-      }
-
-      // 🔹 Step 5: Create a New Chat
-      print(
-          "🔥 Attempting to create chat for: ${currentUser.uid} & ${matchedUserUid}");
-      var newChatRef = _firestore.collection('chats').doc();
-
-      await newChatRef.set({
-        "participants": [
-          currentUser.uid,
-          matchedUserUid
-        ], // 🔹 Must include currentUser.uid
-        "createdAt": FieldValue.serverTimestamp(),
-        "chatStatus": "active"
-      });
-
-      print("✅ Chat successfully created: ${newChatRef.id}");
-
-      // 🔹 Step 6: Update User Chat Status
-      await currentUserRef
-          .update({"currentChat": newChatRef.id, "matchable": false});
-      await matchedUserRef
-          .update({"currentChat": newChatRef.id, "matchable": false});
-
-      print("🔄 Users updated to be in the new chat.");
-
-      // 🔹 Step 7: Navigate to Chat Screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => ChatScreen(chatId: newChatRef.id)),
-      );
     } catch (e) {
       print("🚨 ERROR creating chat: $e");
     }
@@ -140,7 +131,7 @@ class ChatHomeScreen extends StatelessWidget {
             left: 78,
             top: 405,
             child: GestureDetector(
-              onTap: () => _startNewChat(context),
+              onTap: _startNewChat,
               child: Container(
                 width: 247,
                 height: 91,
@@ -160,52 +151,6 @@ class ChatHomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-          ),
-          // Browse Categories Button
-          Positioned(
-            left: 78,
-            top: 510,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => GroupsScreen()),
-                );
-              },
-              child: Container(
-                width: 247,
-                height: 91,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF83B9FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Browse Categories',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Menu Button
-          Positioned(
-            right: 20,
-            top: 50,
-            child: IconButton(
-              icon: const Icon(Icons.menu, size: 30, color: Colors.black),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MenuScreen()),
-                );
-              },
             ),
           ),
         ],
