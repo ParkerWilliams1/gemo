@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
+import 'package:gemo/screens/waiting_for_match_screen.dart';
 
 class ChatHomeScreen extends StatefulWidget {
-  static const String routeName = '/chathome'; // ✅ Add this line
+  static const String routeName = '/chathome';
 
   @override
   _ChatHomeScreenState createState() => _ChatHomeScreenState();
@@ -14,10 +15,63 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _currentChatId;
+  bool _waitingForMatch = false;
 
-  @override
-  void initState() {
-    super.initState();
+  void _startNewChat() async {
+    setState(() {
+      _waitingForMatch = true; // Show waiting screen
+    });
+
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      print("🚨 ERROR: No user is logged in.");
+      return;
+    }
+
+    DocumentReference currentUserRef =
+        _firestore.collection('users').doc(currentUser.uid);
+
+    // 🔹 Step 1: Reset old chat before searching for a match
+    await currentUserRef.update({"currentChat": null, "matchable": true});
+
+    print("🔄 Reset current user’s chat status.");
+
+    DocumentReference queueRef =
+        _firestore.collection('chat_queue').doc('waiting_user');
+    DocumentSnapshot queueDoc = await queueRef.get();
+
+    if (queueDoc.exists && queueDoc['uid'] != currentUser.uid) {
+      // 🔹 Step 2: A match is found; create a new chat
+      String matchedUserUid = queueDoc['uid'];
+      DocumentReference matchedUserRef =
+          _firestore.collection('users').doc(matchedUserUid);
+
+      var newChatRef = _firestore.collection('chats').doc();
+      await newChatRef.set({
+        "participants": [currentUser.uid, matchedUserUid],
+        "createdAt": FieldValue.serverTimestamp(),
+        "chatStatus": "active"
+      });
+
+      print("✅ New chat created: ${newChatRef.id}");
+
+      // 🔹 Step 3: Assign both users to the same chat
+      await currentUserRef
+          .update({"currentChat": newChatRef.id, "matchable": false});
+
+      await matchedUserRef
+          .update({"currentChat": newChatRef.id, "matchable": false});
+
+      // 🔹 Step 4: Remove the waiting user from the queue
+      await queueRef.delete();
+
+      print("🔄 Match complete! Both users are in the same chat.");
+    } else {
+      // 🔹 No available match; add the user to the queue
+      print("🔄 No match found, adding user to queue...");
+      await queueRef.set({"uid": currentUser.uid});
+    }
+
     _listenForChatUpdates();
   }
 
@@ -34,6 +88,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         String chatId = doc.data()?['currentChat'];
         if (chatId.isNotEmpty && chatId != _currentChatId) {
           _currentChatId = chatId;
+          _waitingForMatch = false; // Hide waiting screen
           _navigateToChatScreen(chatId);
         }
       }
@@ -41,67 +96,21 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   }
 
   void _navigateToChatScreen(String chatId) {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ChatScreen(chatId: chatId)),
     );
   }
 
-  void _startNewChat() async {
-    try {
-      User? currentUser = _auth.currentUser;
-      if (currentUser == null) {
-        print("🚨 ERROR: No user is logged in.");
-        return;
-      }
-
-      print("🔍 Checking for available match...");
-      DocumentReference queueRef =
-          _firestore.collection('chat_queue').doc('waiting_user');
-      DocumentSnapshot queueDoc = await queueRef.get();
-
-      if (queueDoc.exists && queueDoc['uid'] != currentUser.uid) {
-        // 🔹 Match found, create a chat
-        String matchedUserUid = queueDoc['uid'];
-
-        var newChatRef = _firestore.collection('chats').doc();
-        await newChatRef.set({
-          "participants": [currentUser.uid, matchedUserUid],
-          "createdAt": FieldValue.serverTimestamp(),
-          "chatStatus": "active"
-        });
-
-        print("✅ Chat created: ${newChatRef.id}");
-
-        // 🔹 Update users
-        await _firestore
-            .collection('users')
-            .doc(currentUser.uid)
-            .update({"currentChat": newChatRef.id, "matchable": false});
-
-        await _firestore
-            .collection('users')
-            .doc(matchedUserUid)
-            .update({"currentChat": newChatRef.id, "matchable": false});
-
-        // 🔹 Clear queue
-        await queueRef.delete();
-      } else {
-        // No one available, add user to queue
-        print("🔄 No match found, adding user to queue...");
-        await queueRef.set({"uid": currentUser.uid});
-      }
-    } catch (e) {
-      print("🚨 ERROR creating chat: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    if (_waitingForMatch) {
+      return WaitingForMatchScreen();
+    }
+
     return Scaffold(
       body: Stack(
         children: [
-          // Background image
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -110,7 +119,6 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
               ),
             ),
           ),
-          // Chat text
           const Align(
             alignment: Alignment.topCenter,
             child: Padding(
@@ -126,7 +134,6 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
               ),
             ),
           ),
-          // New Chat Button
           Positioned(
             left: 78,
             top: 405,
