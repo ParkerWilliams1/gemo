@@ -134,7 +134,7 @@ if (!mounted) return;
             top: 405,
             child: GestureDetector(
               onTap: () async {
-                await _startNewChat(context);
+                 _startNewChat(context);
                 },
               child: Container(
                 width: 247,
