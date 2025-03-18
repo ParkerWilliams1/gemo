@@ -3,25 +3,30 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/services/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
-import 'package:gemo/screens/categories_screen.dart';
-import 'package:gemo/screens/menu_screen.dart'; // Import MenuScreen
-import 'package:logger/logger.dart'; // Import logger package
+import 'package:gemo/screens/waiting_for_match_screen.dart';
+import 'package:logger/logger.dart';
 
-class ChatHomeScreen extends StatelessWidget {
-  final AuthService authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class ChatHomeScreen extends StatefulWidget {
+  static const String routeName = '/chathome';
+
+  const ChatHomeScreen({super.key});
+
+  @override
+  ChatHomeScreenState createState() => ChatHomeScreenState();
+}
+
+class ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   static const routeName = '/chathome';
-  final Logger _logger = Logger(); // Initialize logger
-
-  ChatHomeScreen({super.key});
 
   // Function to start a new chat with a randomly matched user
   void _startNewChat(BuildContext context) async {
+    final logger = Logger(); // Initialize Logger
     User? currentUser = _auth.currentUser;
     if (currentUser == null) {
-      _logger.w("No user is logged in.");
+      logger.e("No user is logged in.");
       return;
     }
 
@@ -34,14 +39,14 @@ class ChatHomeScreen extends StatelessWidget {
 
       // If user is not matchable, reset them so they can be matched again
       if (!isMatchable) {
-        _logger.w("User was not matchable, resetting...");
+        logger.w("User was not matchable, resetting...");
         await currentUserRef.update({
           "matchable": true,
         });
       }
     }
 
-    _logger.w("Searching for available users...");
+    logger.w("Searching for available users...");
     QuerySnapshot usersSnapshot = await _firestore
         .collection('users')
         .where('matchable', isEqualTo: true)
@@ -50,7 +55,7 @@ class ChatHomeScreen extends StatelessWidget {
         .get();
 
     if (usersSnapshot.docs.isEmpty) {
-      _logger.w("No available users for matching.");
+      logger.w("No available users for matching.");
       return;
     }
 
@@ -58,33 +63,35 @@ class ChatHomeScreen extends StatelessWidget {
     DocumentReference matchedUserRef =
         _firestore.collection('users').doc(usersSnapshot.docs.first.id);
 
-    _logger.w("Matched user found: $matchedUserUid");
+    logger.i("Matched user found: $matchedUserUid");
 
     DocumentSnapshot matchedUserDoc = await matchedUserRef.get();
     if (!matchedUserDoc.exists) {
-      _logger.w("Error: Matched user document does not exist.");
+      logger.e("Error: Matched user document does not exist.");
       return;
     }
 
-    var newChatRef = _firestore.collection('chats').doc();
-    await newChatRef.set({
-      "participants": [
-        currentUser.uid,
-        matchedUserUid
-      ], // Store actual UID, not Firestore ID
-      "createdAt": FieldValue.serverTimestamp(),
-      "chatStatus": "active"
-    });
+      var newChatRef = _firestore.collection('chats').doc();
+      await newChatRef.set({
+        "participants": [currentUser.uid, matchedUserUid],
+        "createdAt": FieldValue.serverTimestamp(),
+        "chatStatus": "active"
+      });
 
-    await currentUserRef
-        .update({"currentChat": newChatRef.id, "matchable": false});
+      logger.i("✅ New chat created: ${newChatRef.id}");
 
-    await matchedUserRef
-        .update({"currentChat": newChatRef.id, "matchable": false});
+      // 🔹 Step 3: Assign both users to the same chat
+      await currentUserRef
+          .update({"currentChat": newChatRef.id, "matchable": false});
 
-    if (!context.mounted) return;
-    _logger.i("Chat successfully created! Navigating to chat screen...");
-    Navigator.of(context).push(
+      await matchedUserRef
+          .update({"currentChat": newChatRef.id, "matchable": false});
+
+    logger.i("Chat successfully created! Navigating to chat screen...");
+    
+if (!mounted) return;
+    Navigator.push(
+      context,
       MaterialPageRoute(
           builder: (context) => ChatScreen(chatId: newChatRef.id)),
     );
@@ -92,19 +99,21 @@ class ChatHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_waitingForMatch) {
+      return WaitingForMatchScreen();
+    }
+
     return Scaffold(
       body: Stack(
         children: [
-          // Background image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('lib/images/HomeScreen.png'),
-                fit: BoxFit.cover, // Cover the entire screen
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          // Chat text
           const Align(
             alignment: Alignment.topCenter,
             child: Padding(
@@ -120,12 +129,13 @@ class ChatHomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          // New Chat Button
           Positioned(
             left: 78,
             top: 405,
             child: GestureDetector(
-              onTap: () => _startNewChat(context),
+              onTap: () async {
+                await _startNewChat(context);
+                },
               child: Container(
                 width: 247,
                 height: 91,
@@ -145,52 +155,6 @@ class ChatHomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-          ),
-          // Browse Categories Button
-          Positioned(
-            left: 78,
-            top: 510, // Positioned below the "New Chat" button
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => GroupsScreen()),
-                );
-              },
-              child: Container(
-                width: 247,
-                height: 91,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF83B9FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Browse Categories',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Menu Button (Replaces Logout Button)
-          Positioned(
-            right: 20,
-            top: 50,
-            child: IconButton(
-              icon: const Icon(Icons.menu, size: 30, color: Colors.black),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MenuScreen()),
-                );
-              },
             ),
           ),
         ],

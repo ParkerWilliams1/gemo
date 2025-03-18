@@ -16,8 +16,42 @@ class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final MatchmakingService _matchmakingService = MatchmakingService();
 
+  String _participantName = "Chat"; // Default title
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchParticipantName();
+  }
+
+  // Fetch the name of the other participant
+  void _fetchParticipantName() async {
+    User? user = _auth.currentUser;
+    if (user == null) return;
+
+    DocumentSnapshot chatDoc =
+        await _firestore.collection('chats').doc(widget.chatId).get();
+
+    if (!chatDoc.exists) return;
+
+    List<dynamic> participants = chatDoc['participants'];
+    String? otherUserUid =
+        participants.firstWhere((id) => id != user.uid, orElse: () => null);
+
+    if (otherUserUid != null) {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(otherUserUid).get();
+
+      if (userDoc.exists && userDoc['email'] != null) {
+        setState(() {
+          _participantName = userDoc['email']; // Update UI with other user's name
+        });
+      }
+    }
+  }
+
+  // Send a message
   void _sendMessage() async {
     String messageText = _messageController.text.trim();
     if (messageText.isEmpty) return;
@@ -25,19 +59,26 @@ class ChatScreenState extends State<ChatScreen> {
     User? user = _auth.currentUser;
     if (user == null) return;
 
-    await _firestore
-        .collection('chats')
-        .doc(widget.chatId)
-        .collection('messages')
-        .add({
-      "message": messageText,
-      "senderId": user.uid,
-      "timestamp": FieldValue.serverTimestamp(),
-    });
+    try {
+      await _firestore
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .add({
+        "message": messageText,
+        "senderId": user.uid,
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+
+      print("Message sent: $messageText");
+    } catch (e) {
+      print("Error sending message: $e");
+    }
 
     _messageController.clear();
   }
 
+  // Leave the chat
   void _leaveChat() async {
     User? user = _auth.currentUser;
     if (user == null) {
@@ -55,7 +96,7 @@ class ChatScreenState extends State<ChatScreen> {
 
     String? currentChatId = userDoc['currentChat'];
     if (currentChatId == null) {
-      Logger().e("User is not currently in an active chat.");
+      print("User is not currently in an active chat.");
       return;
     }
 
@@ -68,19 +109,19 @@ class ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    Logger().i("Chat found: ${chatDoc.data()}");
+    print("Chat found: ${chatDoc.data()}");
 
     List<dynamic> participants = chatDoc['participants'];
     if (participants.length < 2) {
-      Logger().w("Warning: Chat has less than 2 participants.");
+      print("Warning: Chat has less than 2 participants.");
     }
 
     // Find the other user in the chat
     String? otherUserUid =
         participants.firstWhere((id) => id != user.uid, orElse: () => null);
 
-    Logger().i("Current user ID: ${user.uid}");
-    Logger().i("Other user UID: $otherUserUid");
+    print("Current user ID: ${user.uid}");
+    print("Other user UID: $otherUserUid");
 
     // Update current user
     await userRef.update({
@@ -90,28 +131,20 @@ class ChatScreenState extends State<ChatScreen> {
 
     Logger().i("Current user ${user.uid} is now matchable again.");
 
-    // 🔹 Instead of using Firestore document ID, search for the other user by their `uid`
+    // Update the other user
     if (otherUserUid != null) {
-      QuerySnapshot userQuery = await _firestore
-          .collection('users')
-          .where("uid", isEqualTo: otherUserUid)
-          .limit(1)
-          .get();
-
-      if (userQuery.docs.isNotEmpty) {
-        DocumentReference otherUserRef = userQuery.docs.first.reference;
-
-        await otherUserRef.update({
-          "currentChat": null,
-          "matchable": true,
-        });
-        Logger().i("Other user ($otherUserUid) is now matchable again.");
-      } else {
-        Logger().e("Error: Other user document not found in Firestore.");
-      }
-    } else {
-      Logger().e("Error: No other user found in the chat.");
+      DocumentReference otherUserRef = _firestore.collection('users').doc(otherUserUid);
+      await otherUserRef.update({
+        "currentChat": null,
+        "matchable": true,
+      });
+      print("Other user ($otherUserUid) is now matchable again.");
     }
+
+    // Remove user from chat participants
+    await chatRef.update({
+      "participants": FieldValue.arrayRemove([user.uid]),
+    });
 
     Logger().i("User ${user.uid} left the chat and is matchable again.");
 
@@ -128,15 +161,14 @@ class ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Chat', style: TextStyle(color: Colors.black)),
+        title: Text(_participantName, style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 1,
-        automaticallyImplyLeading:
-            false, // 🔹 This removes the default back button
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app, color: Colors.black),
-            onPressed: _leaveChat, // Call leave chat function
+            onPressed: _leaveChat,
           )
         ],
       ),
