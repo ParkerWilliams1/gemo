@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'chat_home_screen.dart';
+
 class WaitingForMatchScreen extends StatelessWidget {
   const WaitingForMatchScreen({super.key});
 
@@ -20,7 +22,10 @@ class WaitingForMatchScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Let users cancel the search
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatHomeScreen()),
+                );
               },
               child: const Text("Cancel"),
             ),

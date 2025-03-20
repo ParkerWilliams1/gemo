@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/waiting_for_match_screen.dart';
-import 'package:gemo/screens/categories_screen.dart'; // ✅ Updated to CategoriesScreen
+import 'package:gemo/screens/categories_screen.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
@@ -18,6 +18,71 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   String? _currentChatId;
   bool _waitingForMatch = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _resetChatOnStartup(); // ✅ Reset chat state on app start
+  }
+
+  void _resetChatOnStartup() async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    DocumentReference currentUserRef =
+        _firestore.collection('users').doc(currentUser.uid);
+    DocumentReference queueRef =
+        _firestore.collection('chat_queue').doc('waiting_user');
+
+    // ✅ Remove user from the queue on app startup to avoid stale entries
+    await _firestore.runTransaction((transaction) async {
+      DocumentSnapshot queueSnapshot = await transaction.get(queueRef);
+      if (queueSnapshot.exists && queueSnapshot['uid'] == currentUser.uid) {
+        transaction.delete(queueRef);
+        print("🗑 Removed stale queue entry for user ${currentUser.uid}");
+      }
+    });
+
+    // ✅ Reset chat state for proper matching
+    await currentUserRef.update({
+      "currentChat": null,
+      "matchable": true,
+    });
+
+    print("🔄 Reset chat state on app start.");
+  }
+
+  Future<void> _matchUsers(String user1Uid, String user2Uid,
+      DocumentReference queueRef, DocumentReference user1Ref) async {
+    DocumentReference user2Ref = _firestore.collection('users').doc(user2Uid);
+    DocumentSnapshot user2Doc = await user2Ref.get();
+
+    // ✅ Ensure user2 is still active and matchable before proceeding
+    if (!user2Doc.exists ||
+        user2Doc['matchable'] == false ||
+        user2Doc['currentChat'] != null) {
+      print(
+          "🚨 User $user2Uid is no longer available for matching. Removing from queue...");
+      await queueRef.delete();
+      return;
+    }
+
+    var newChatRef = _firestore.collection('chats').doc();
+    await newChatRef.set({
+      "participants": [user1Uid, user2Uid],
+      "createdAt": FieldValue.serverTimestamp(),
+      "chatStatus": "active"
+    });
+
+    print("✅ New chat created: ${newChatRef.id}");
+
+    // Update both users' chat references
+    await user1Ref.update({"currentChat": newChatRef.id, "matchable": false});
+    await user2Ref.update({"currentChat": newChatRef.id, "matchable": false});
+
+    // Remove from queue
+    await queueRef.delete();
+  }
+
   void _startNewChat() async {
     setState(() {
       _waitingForMatch = true; // Show waiting screen
@@ -29,35 +94,41 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       return;
     }
 
-    DocumentReference queueRef = _firestore.collection('chat_queue').doc('waiting_user');
+    DocumentReference currentUserRef =
+        _firestore.collection('users').doc(currentUser.uid);
+    DocumentReference queueRef =
+        _firestore.collection('chat_queue').doc('waiting_user');
+
+    // ✅ Remove old queue entries before adding a new user
+    await _firestore.runTransaction((transaction) async {
+      DocumentSnapshot queueSnapshot = await transaction.get(queueRef);
+      if (queueSnapshot.exists) {
+        String queuedUserId = queueSnapshot['uid'];
+        DocumentSnapshot queuedUserDoc =
+            await _firestore.collection('users').doc(queuedUserId).get();
+
+        if (!queuedUserDoc.exists ||
+            queuedUserDoc['matchable'] == false ||
+            queuedUserDoc['currentChat'] != null) {
+          transaction.delete(queueRef); // Remove stale queue entry
+          print("🗑 Removed stale user from queue: $queuedUserId");
+        }
+      }
+    });
+
+    // 🔹 Step 1: Reset user's chat state
+    await currentUserRef.update({"currentChat": null, "matchable": true});
+
+    // 🔹 Step 2: Check for a match again
     DocumentSnapshot queueDoc = await queueRef.get();
-
     if (queueDoc.exists && queueDoc['uid'] != currentUser.uid) {
-      String matchedUserUid = queueDoc['uid'];
-      var newChatRef = _firestore.collection('chats').doc();
-
-      await newChatRef.set({
-        "participants": [currentUser.uid, matchedUserUid],
-        "createdAt": FieldValue.serverTimestamp(),
-        "chatStatus": "active"
-      });
-
-      print("✅ New chat created: ${newChatRef.id}");
-
-      await _firestore.collection('users').doc(currentUser.uid).update({
-        "currentChat": newChatRef.id,
-        "matchable": false
-      });
-
-      await _firestore.collection('users').doc(matchedUserUid).update({
-        "currentChat": newChatRef.id,
-        "matchable": false
-      });
-
-      await queueRef.delete();
+      // Match found, create chat
+      await _matchUsers(
+          currentUser.uid, queueDoc['uid'], queueRef, currentUserRef);
     } else {
-      print("🔄 No match found, adding user to queue...");
+      // No match found, force user into queue
       await queueRef.set({"uid": currentUser.uid});
+      print("🔄 No match found, user added to queue.");
     }
 
     _listenForChatUpdates();
@@ -67,13 +138,23 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     User? currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    _firestore.collection('users').doc(currentUser.uid).snapshots().listen((doc) {
-      if (doc.exists && doc.data()?['currentChat'] != null) {
-        String chatId = doc.data()?['currentChat'];
-        if (chatId.isNotEmpty && chatId != _currentChatId) {
-          _currentChatId = chatId;
-          _waitingForMatch = false; // Hide waiting screen
-          _navigateToChatScreen(chatId);
+    _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .snapshots()
+        .listen((doc) {
+      if (doc.exists) {
+        String? chatId = doc.data()?['currentChat'];
+
+        if (chatId != null && chatId.isNotEmpty) {
+          if (chatId != _currentChatId) {
+            setState(() {
+              _currentChatId = chatId;
+              _waitingForMatch = false; // Hide waiting screen properly
+            });
+
+            _navigateToChatScreen(chatId);
+          }
         }
       }
     });
@@ -145,7 +226,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
               ),
             ),
           ),
-          // Browse Categories Button (Smaller & Light Gray)
+          // Browse Categories Button
           Positioned(
             left: 120, // Centered below "New Chat"
             top: 510, // Below "New Chat" button
@@ -153,14 +234,16 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CategoriesScreen()), // ✅ Corrected navigation
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          CategoriesScreen()), // ✅ Navigate correctly
                 );
               },
               child: Container(
                 width: 180,
                 height: 55,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300], // ✅ Light gray background
+                  color: Colors.grey[300], // Light gray background
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(
