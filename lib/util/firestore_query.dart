@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_profile.dart';
+import 'package:logger/logger.dart';
 
 class FirestoreQuery {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -15,11 +16,11 @@ class FirestoreQuery {
         Map<String, dynamic>? data = doc.data() as Map<String, dynamic>;
         return UserProfile.fromFirestore(data, doc.id); // ✅ Use correct method
       } else {
-        print("User profile not found for UID: $uid");
+        Logger().i("User profile not found for UID: $uid");
         return null;
       }
     } catch (e) {
-      print("Error fetching user profile: $e");
+      Logger().e("Error fetching user profile: $e");
       return null;
     }
   }
@@ -30,13 +31,13 @@ class FirestoreQuery {
       User? currentUser = _auth.currentUser;
 
       if (currentUser == null) {
-        print("No user is currently logged in.");
+        Logger().i("No user is currently logged in.");
         return null;
       }
 
       return await fetchUserProfileByUid(currentUser.uid);
     } catch (e) {
-      print("Error fetching current user profile: $e");
+      Logger().e("Error fetching current user profile: $e");
       return null;
     }
   }
