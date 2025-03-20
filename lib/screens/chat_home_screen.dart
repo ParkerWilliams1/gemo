@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:gemo/services/auth_service.dart';
+// import 'package:gemo/services/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/waiting_for_match_screen.dart';
 import 'package:logger/logger.dart';
@@ -18,6 +18,7 @@ class ChatHomeScreen extends StatefulWidget {
 class ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  bool waitingForMatch = false; // Define and initialize the variable
 
   static const routeName = '/chathome';
 
@@ -87,19 +88,20 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
       await matchedUserRef
           .update({"currentChat": newChatRef.id, "matchable": false});
 
-    logger.i("Chat successfully created! Navigating to chat screen...");
-    
-if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => ChatScreen(chatId: newChatRef.id)),
-    );
+logger.i("Chat successfully created! Navigating to chat screen...");
+
+if (context.mounted) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+        builder: (context) => ChatScreen(chatId: newChatRef.id)),
+  );
+}
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_waitingForMatch) {
+    if (waitingForMatch == true) {
       return WaitingForMatchScreen();
     }
 

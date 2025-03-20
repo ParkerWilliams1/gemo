@@ -3,6 +3,7 @@ import 'package:gemo/services/user_matching.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class WaitingForMatchScreen extends StatefulWidget {
+  static const String routeName = '/waitingformatch';
   const WaitingForMatchScreen({super.key});
     @override
   State<WaitingForMatchScreen> createState() => WaitingForMatchScreenState();
@@ -31,6 +32,7 @@ class WaitingForMatchScreenState extends State<WaitingForMatchScreen> {
       _matchmakingService.leaveQueue(user.uid);
     }
   }
+  
 
   @override
   void dispose() {

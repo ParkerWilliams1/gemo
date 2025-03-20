@@ -112,10 +112,10 @@ class SignInScreenState extends State<SignInScreen> {
           // Email Input Field
           Positioned(
             left: 78,
-            top: 392,
+            top: 400,
             child: Container(
               width: 247,
-              height: 43,
+              height: 40,
               decoration: ShapeDecoration(
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -136,7 +136,7 @@ class SignInScreenState extends State<SignInScreen> {
           // Password Label
           const Positioned(
             left: 93,
-            top: 448,
+            top: 440,
             child: Text(
               'Password',
               style: TextStyle(

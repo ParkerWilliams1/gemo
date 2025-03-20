@@ -6,6 +6,9 @@ import 'screens/home_screen.dart';
 import 'screens/chat_home_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/sign_up_screen.dart';
+import 'screens/categories_screen.dart';
+import 'screens/waiting_for_match_screen.dart';
+import 'screens/profile_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +36,9 @@ class MyApp extends StatelessWidget {
         ChatHomeScreen.routeName: (context) => ChatHomeScreen(),
         SignInScreen.routeName: (context) => const SignInScreen(),
         SignUpScreen.routeName: (context) => const SignUpScreen(),
+        CategoriesScreen.routeName: (context) => CategoriesScreen(),
+        WaitingForMatchScreen.routeName: (context) => const WaitingForMatchScreen(),
+        ProfileScreen.routeName: (context) => const ProfileScreen(),
       },
     );
   }

@@ -99,7 +99,7 @@ class SignUpScreenState extends State<SignUpScreen> {
           // Email Label
           const Positioned(
             left: 93,
-            top: 384,
+            top: 400,
             child: Text(
               'Email',
               style: TextStyle(
@@ -113,7 +113,7 @@ class SignUpScreenState extends State<SignUpScreen> {
           // Email Input Field
           Positioned(
             left: 78,
-            top: 392,
+            top: 415,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -121,6 +121,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                   width: 247,
                   height: 43,
                   decoration: ShapeDecoration(
+                    color: Colors.white,
                     shape: RoundedRectangleBorder(
                       side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                       borderRadius: BorderRadius.circular(12),
@@ -141,7 +142,7 @@ class SignUpScreenState extends State<SignUpScreen> {
           // Password Label
           const Positioned(
             left: 93,
-            top: 448,
+            top: 460,
             child: Text(
               'Password',
               style: TextStyle(
@@ -155,11 +156,12 @@ class SignUpScreenState extends State<SignUpScreen> {
           // Password Input Field
           Positioned(
             left: 78,
-            top: 456,
+            top: 475,
             child: Container(
               width: 247,
               height: 43,
               decoration: ShapeDecoration(
+                color: Colors.white,
                 shape: RoundedRectangleBorder(
                   side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                   borderRadius: BorderRadius.circular(12),
