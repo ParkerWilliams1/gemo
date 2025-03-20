@@ -14,6 +14,7 @@ class ChatHomeScreen extends StatefulWidget {
 
   @override
   ChatHomeScreenState createState() => ChatHomeScreenState();
+  
 }
 
 class ChatHomeScreenState extends State<ChatHomeScreen> {
@@ -100,6 +101,7 @@ if (context.mounted) {
         builder: (context) => ChatScreen(chatId: newChatRef.id)),
   );
 }
+
   }
 
   @override
@@ -109,36 +111,37 @@ if (context.mounted) {
     }
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('lib/images/HomeScreen.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          color: Colors.blue, // Here is where I will replace the color with the users school color
+          image: DecorationImage(
+            image: AssetImage('assets/HomeScreen.png'), // Background Image
+            fit: BoxFit.cover,
           ),
-          const Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: EdgeInsets.only(top: 290),
-              child: Text(
-                'Let’s Chat!',
-                style: TextStyle(
-                  color: Color(0xFF707070),
-                  fontSize: 62,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
+        ),
+        child: Stack(
+          children: [
+            const Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: EdgeInsets.only(top: 290),
+                child: Text(
+                  'Let’s Chat!',
+                  style: TextStyle(
+                    color: Color(0xFF707070),
+                    fontSize: 62,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
-          ),
-          // New Chat Button
-          Positioned(
-            left: 78,
-            top: 405,
-            child: GestureDetector(
+            Positioned(
+              left: 78,
+              top: 405,
+              child: GestureDetector(
               onTap: () async {
                  _startNewChat(context);
                 },

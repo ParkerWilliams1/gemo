@@ -1,0 +1,22 @@
+{
+    "@calbaptist.edu": {
+        "name": "Cal Baptist",
+        "primary_color": "#00274D",
+        "secondary_color": "#B4975A"
+    },
+    "@usc.edu": {
+        "name": "USC",
+        "primary_color": "#990000",
+        "secondary_color": "#FFCC00"
+    },
+    "@ucr.edu": {
+        "name": "UC Riverside",
+        "primary_color": "#FFC72C",
+        "secondary_color": "#0077C8"
+    },
+    "@ucla.edu": {
+        "name": "UCLA",
+        "primary_color": "#2774AE",
+        "secondary_color": "#FFD100"
+    }
+}

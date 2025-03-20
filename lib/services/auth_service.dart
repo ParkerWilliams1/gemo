@@ -52,4 +52,9 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
   }
+
+  Future<String?> getCurrentUserEmail() async {
+    User? user = _auth.currentUser;
+    return user?.email;
+  }
 }
