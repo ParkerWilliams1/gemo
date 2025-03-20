@@ -14,7 +14,6 @@ class ChatHomeScreen extends StatefulWidget {
 
   @override
   ChatHomeScreenState createState() => ChatHomeScreenState();
-  
 }
 
 class ChatHomeScreenState extends State<ChatHomeScreen> {
@@ -74,34 +73,33 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
       return;
     }
 
-      var newChatRef = _firestore.collection('chats').doc();
+    var newChatRef = _firestore.collection('chats').doc();
 
-      await newChatRef.set({
-        "participants": [currentUser.uid, matchedUserUid],
-        "createdAt": FieldValue.serverTimestamp(),
-        "chatStatus": "active"
-      });
+    await newChatRef.set({
+      "participants": [currentUser.uid, matchedUserUid],
+      "createdAt": FieldValue.serverTimestamp(),
+      "chatStatus": "active"
+    });
 
-      logger.i("✅ New chat created: ${newChatRef.id}");
+    logger.i("✅ New chat created: ${newChatRef.id}");
 
-      await _firestore.collection('users').doc(currentUser.uid).update({
-        "currentChat": newChatRef.id,
-        "matchable": false
-      });
+    await _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .update({"currentChat": newChatRef.id, "matchable": false});
 
-      await matchedUserRef
-          .update({"currentChat": newChatRef.id, "matchable": false});
+    await matchedUserRef
+        .update({"currentChat": newChatRef.id, "matchable": false});
 
-logger.i("Chat successfully created! Navigating to chat screen...");
+    logger.i("Chat successfully created! Navigating to chat screen...");
 
-if (context.mounted) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-        builder: (context) => ChatScreen(chatId: newChatRef.id)),
-  );
-}
-
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(chatId: newChatRef.id)),
+      );
+    }
   }
 
   @override
@@ -115,7 +113,8 @@ if (context.mounted) {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          color: Colors.blue, // Here is where I will replace the color with the users school color
+          color: Colors
+              .blue, // Here is where I will replace the color with the users school color
           image: DecorationImage(
             image: AssetImage('assets/HomeScreen.png'), // Background Image
             fit: BoxFit.cover,
@@ -142,63 +141,66 @@ if (context.mounted) {
               left: 78,
               top: 405,
               child: GestureDetector(
-              onTap: () async {
-                 _startNewChat(context);
+                onTap: () async {
+                  _startNewChat(context);
                 },
-              child: Container(
-                width: 247,
-                height: 91,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF83B9FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'New Chat',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
+                child: Container(
+                  width: 247,
+                  height: 91,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF83B9FF),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'New Chat',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 24,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          // Browse Categories Button (Smaller & Light Gray)
-          Positioned(
-            left: 120, // Centered below "New Chat"
-            top: 510, // Below "New Chat" button
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CategoriesScreen()), // ✅ Corrected navigation
-                );
-              },
-              child: Container(
-                width: 180,
-                height: 55,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300], // ✅ Light gray background
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Browse Categories',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
+            // Browse Categories Button (Smaller & Light Gray)
+            Positioned(
+              left: 120, // Centered below "New Chat"
+              top: 510, // Below "New Chat" button
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            CategoriesScreen()), // ✅ Corrected navigation
+                  );
+                },
+                child: Container(
+                  width: 180,
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300], // ✅ Light gray background
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Browse Categories',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
