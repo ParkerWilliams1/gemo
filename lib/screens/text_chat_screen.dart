@@ -5,6 +5,8 @@ import 'package:logger/logger.dart';
 import 'package:gemo/services/user_matching.dart';
 
 
+import 'chat_home_screen.dart';
+
 class ChatScreen extends StatefulWidget {
   final String chatId;
   const ChatScreen({super.key, required this.chatId});
@@ -47,7 +49,8 @@ class ChatScreenState extends State<ChatScreen> {
 
       if (userDoc.exists && userDoc['email'] != null) {
         setState(() {
-          _participantName = userDoc['email']; // Update UI with other user's name
+          _participantName =
+              userDoc['email']; // Update UI with other user's name
         });
       }
     }
@@ -84,7 +87,7 @@ class ChatScreenState extends State<ChatScreen> {
   void _leaveChat() async {
     User? user = _auth.currentUser;
     if (user == null) {
-      Logger().e("No authenticated user found.");
+      Logger().e("🚨 No authenticated user found.");
       return;
     }
 
@@ -92,7 +95,7 @@ class ChatScreenState extends State<ChatScreen> {
     DocumentSnapshot userDoc = await userRef.get();
 
     if (!userDoc.exists) {
-      Logger().e("Current user document not found in Firestore.");
+      Logger().e("🚨 Current user document not found in Firestore.");
       return;
     }
 
@@ -102,12 +105,11 @@ class ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    DocumentReference chatRef =
-        _firestore.collection('chats').doc(currentChatId);
+    DocumentReference chatRef = _firestore.collection('chats').doc(widget.chatId);
     DocumentSnapshot chatDoc = await chatRef.get();
 
     if (!chatDoc.exists) {
-      Logger().e("Chat document not found in Firestore.");
+      Logger().e("🚨 Chat document not found in Firestore.");
       return;
     }
 
@@ -120,42 +122,47 @@ class ChatScreenState extends State<ChatScreen> {
 
     // Find the other user in the chat
     String? otherUserUid =
+       
         participants.firstWhere((id) => id != user.uid, orElse: () => null);
 
     Logger().i("Current user ID: ${user.uid}");
     Logger().i("Other user UID: $otherUserUid");
 
-    // Update current user
+    // 🔹 Step 1: Reset the current user's chat status
     await userRef.update({
       "currentChat": null,
       "matchable": true,
     });
 
-    Logger().i("Current user ${user.uid} is now matchable again.");
+    Logger().i("✅ Current user ${user.uid} is now matchable again.");
 
-    // Update the other user
+    // 🔹 Step 2: If there's another participant, reset their status too
     if (otherUserUid != null) {
-      DocumentReference otherUserRef = _firestore.collection('users').doc(otherUserUid);
+      DocumentReference otherUserRef =
+          _firestore.collection('users').doc(otherUserUid);
       await otherUserRef.update({
         "currentChat": null,
         "matchable": true,
       });
-      Logger().i("Other user ($otherUserUid) is now matchable again.");
+      Logger().i("✅ Other user ($otherUserUid) is now matchable again.");
     }
 
-    // Remove user from chat participants
+    // 🔹 Step 3: Remove user from chat participants
     await chatRef.update({
       "participants": FieldValue.arrayRemove([user.uid]),
     });
 
-    Logger().i("User ${user.uid} left the chat and is matchable again.");
+    Logger().i("✅ User ${user.uid} left the chat and is matchable again.");
 
     // Rejoin the matchmaking queue
     _matchmakingService.joinQueue(user.uid);
 
-    // Navigate back to chat home
+    // 🔹 Step 4: Navigate back to chat home
     if (!mounted) return;
-    Navigator.pop(context);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => ChatHomeScreen()),
+    );
   }
 
   @override
