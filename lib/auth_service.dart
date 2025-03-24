@@ -50,6 +50,17 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      await FirebaseFirestore.instance
+          .collection('chat_queue')
+          .doc(currentUser.uid)
+          .delete()
+          .catchError((e) {
+        print("ℹ️ No queue entry to delete on sign-out.");
+      });
+    }
+
     await _auth.signOut();
   }
 }
