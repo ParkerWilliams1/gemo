@@ -41,7 +41,11 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     DocumentReference currentUserRef =
         _firestore.collection('users').doc(currentUser.uid);
     DocumentReference queueRef =
-        _firestore.collection('chat_queue').doc('waiting_user');
+        _firestore.collection('chat_queue').doc(currentUser.uid);
+
+    await queueRef.delete().catchError((e) {
+      print("ℹ️ No existing queue entry for cleanup.");
+    });
 
     // ✅ Remove user from the queue on app startup to avoid stale entries
     await _firestore.runTransaction((transaction) async {
@@ -93,55 +97,98 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     await queueRef.delete();
   }
 
-  void _startNewChat() async {
+  Future<void> startNewChatSafely() async {
     setState(() {
-      _waitingForMatch = true; // Show waiting screen
+      _waitingForMatch = true;
     });
 
-    User? currentUser = _auth.currentUser;
+    final currentUser = _auth.currentUser;
     if (currentUser == null) {
       print("🚨 ERROR: No user is logged in.");
       return;
     }
 
-    DocumentReference currentUserRef =
-        _firestore.collection('users').doc(currentUser.uid);
-    DocumentReference queueRef =
-        _firestore.collection('chat_queue').doc('waiting_user');
+    final String currentUid = currentUser.uid;
+    final userRef = _firestore.collection('users').doc(currentUid);
+    final queueRef = _firestore.collection('chat_queue').doc(currentUid);
 
-    // ✅ Remove old queue entries before adding a new user
-    await _firestore.runTransaction((transaction) async {
-      DocumentSnapshot queueSnapshot = await transaction.get(queueRef);
-      if (queueSnapshot.exists) {
-        String queuedUserId = queueSnapshot['uid'];
-        DocumentSnapshot queuedUserDoc =
-            await _firestore.collection('users').doc(queuedUserId).get();
-
-        if (!queuedUserDoc.exists ||
-            queuedUserDoc['matchable'] == false ||
-            queuedUserDoc['currentChat'] != null) {
-          transaction.delete(queueRef); // Remove stale queue entry
-          print("🗑 Removed stale user from queue: $queuedUserId");
-        }
-      }
-    });
-
-    // 🔹 Step 1: Reset user's chat state
-    await currentUserRef.update({"currentChat": null, "matchable": true});
-
-    // 🔹 Step 2: Check for a match again
-    DocumentSnapshot queueDoc = await queueRef.get();
-    if (queueDoc.exists && queueDoc['uid'] != currentUser.uid) {
-      // Match found, create chat
-      await _matchUsers(
-          currentUser.uid, queueDoc['uid'], queueRef, currentUserRef);
-    } else {
-      // No match found, force user into queue
-      await queueRef.set({"uid": currentUser.uid});
-      print("🔄 No match found, user added to queue.");
+    // Step 1: Clean up any stale queue entry for the current user
+    try {
+      await queueRef.delete();
+      print("🧹 Cleared old queue entry for $currentUid.");
+    } catch (e) {
+      print("ℹ️ No previous queue entry to delete for $currentUid.");
     }
 
-    _listenForChatUpdates();
+    // Step 2: Search for another user in the queue (excluding current user)
+    try {
+      final snapshot = await _firestore
+          .collection('chat_queue')
+          .where('uid', isNotEqualTo: currentUid)
+          .orderBy('timestamp')
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final matchedDoc = snapshot.docs.first;
+        final matchedData = matchedDoc.data() as Map<String, dynamic>?;
+
+        if (matchedData == null ||
+            matchedData['uid'] == null ||
+            matchedData['uid'].toString().isEmpty) {
+          print("❌ ERROR: Matched document missing 'uid' field.");
+          return;
+        }
+
+        final String matchedUid = matchedData['uid'];
+        print("🎯 Match found! Matched with user $matchedUid");
+
+        final matchedUserRef = _firestore.collection('users').doc(matchedUid);
+        final matchedQueueRef =
+            _firestore.collection('chat_queue').doc(matchedUid);
+
+        // Step 3: Create a new chat
+        final newChatRef = _firestore.collection('chats').doc();
+        await newChatRef.set({
+          'participants': [currentUid, matchedUid],
+          'createdAt': FieldValue.serverTimestamp(),
+          'chatStatus': 'active',
+        });
+
+        // Step 4: Update both users' chat references
+        await userRef
+            .update({'currentChat': newChatRef.id, 'matchable': false});
+        await matchedUserRef
+            .update({'currentChat': newChatRef.id, 'matchable': false});
+
+        // Step 5: Clean up queue entries
+        await queueRef.delete();
+        await matchedQueueRef.delete();
+
+        print(
+            "✅ Chat created between $currentUid and $matchedUid. Chat ID: ${newChatRef.id}");
+
+        _listenForChatUpdates();
+      } else {
+        // No match found — add current user to queue
+        print("📥 No match found. Adding $currentUid to queue...");
+
+        try {
+          await queueRef.set({
+            'uid': currentUid,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+          print("✅ Successfully added $currentUid to chat_queue.");
+        } catch (e) {
+          print("🚨 Failed to add user to chat_queue: $e");
+        }
+
+        print("✅ User $currentUid added to chat_queue.");
+        _listenForChatUpdates();
+      }
+    } catch (e) {
+      print("🚨 Firestore error during matchmaking: $e");
+    }
   }
 
   void _navigateToChatScreen(String chatId) {
@@ -213,7 +260,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
             left: 78,
             top: 405,
             child: GestureDetector(
-              onTap: _startNewChat,
+              onTap: startNewChatSafely,
               child: Container(
                 width: 247,
                 height: 91,
