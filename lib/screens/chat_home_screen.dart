@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,11 +19,19 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _currentChatId;
   bool _waitingForMatch = false;
+  late StreamSubscription<DocumentSnapshot> _chatSubscription;
 
   @override
   void initState() {
     super.initState();
-    _resetChatOnStartup(); // ✅ Reset chat state on app start
+    _resetChatOnStartup();
+  }
+
+  @override
+  void dispose() {
+    _chatSubscription
+        .cancel(); // ✅ Cancel stream to avoid setState after dispose
+    super.dispose();
   }
 
   void _resetChatOnStartup() async {
@@ -134,37 +144,36 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     _listenForChatUpdates();
   }
 
-  void _listenForChatUpdates() {
-    User? currentUser = _auth.currentUser;
-    if (currentUser == null) return;
-
-    _firestore
-        .collection('users')
-        .doc(currentUser.uid)
-        .snapshots()
-        .listen((doc) {
-      if (doc.exists) {
-        String? chatId = doc.data()?['currentChat'];
-
-        if (chatId != null && chatId.isNotEmpty) {
-          if (chatId != _currentChatId) {
-            setState(() {
-              _currentChatId = chatId;
-              _waitingForMatch = false; // Hide waiting screen properly
-            });
-
-            _navigateToChatScreen(chatId);
-          }
-        }
-      }
-    });
-  }
-
   void _navigateToChatScreen(String chatId) {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ChatScreen(chatId: chatId)),
     );
+  }
+
+  void _listenForChatUpdates() {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    _chatSubscription = _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .snapshots()
+        .listen((doc) {
+      if (!mounted) return; // ✅ Check if widget is still in tree
+
+      if (doc.exists) {
+        String? chatId = doc.data()?['currentChat'];
+
+        if (chatId != null && chatId.isNotEmpty && chatId != _currentChatId) {
+          setState(() {
+            _currentChatId = chatId;
+            _waitingForMatch = false;
+          });
+          _navigateToChatScreen(chatId);
+        }
+      }
+    });
   }
 
   @override
