@@ -16,14 +16,14 @@ class MatchmakingService {
     final queueRef = _firestore.collection('chat_queue').doc(uid);
     final userRef = _firestore.collection('users').doc(uid);
 
-    // Clear stale queue entry
+    // 🧹 Clear stale queue entry for this user
     await queueRef.delete().catchError((_) {});
 
-    // Try to match with another user in the same category
+    // 🔍 Try to match with another user in the same category
     final snapshot = await _firestore
         .collection('chat_queue')
         .where('uid', isNotEqualTo: uid)
-        .where('category', isEqualTo: category)
+        .where('category', isEqualTo: category) // ✅ Use the selected category
         .orderBy('timestamp')
         .limit(1)
         .get();
@@ -53,6 +53,7 @@ class MatchmakingService {
         MaterialPageRoute(builder: (_) => ChatScreen(chatId: newChatRef.id)),
       );
     } else {
+      // 😕 No match — add current user to the queue with category
       await queueRef.set({
         'uid': uid,
         'timestamp': FieldValue.serverTimestamp(),
@@ -64,8 +65,14 @@ class MatchmakingService {
         MaterialPageRoute(
           builder: (_) => WaitingForMatchScreen(
             category: category,
-            onCancel: () {
-              Navigator.pop(context); // just return to the previous screen
+            onCancel: () async {
+              // Handle user cancellation
+              await queueRef.delete();
+              await userRef.update({
+                'currentChat': null,
+                'matchable': true,
+              });
+              Navigator.pop(context); // Return to CategoriesScreen
             },
           ),
         ),

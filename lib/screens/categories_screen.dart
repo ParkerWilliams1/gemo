@@ -23,27 +23,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     {"title": "EDM"},
   ];
 
-  void _startMatching(String category) async {
-    setState(() => _isMatching = true);
+void _startMatching(String category) async {
+  setState(() => _isMatching = true);
+  await MatchmakingService().startCategoryChat(context, category);
+  if (mounted) setState(() => _isMatching = false);
+}
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => WaitingForMatchScreen(
-          category: category,
-          onCancel: () {
-            Navigator.pop(context); // go back to CategoriesScreen
-            setState(() => _isMatching = false);
-          },
-        ),
-      ),
-    );
-
-    // After matching is complete and user returns, reset state
-    if (mounted) {
-      setState(() => _isMatching = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

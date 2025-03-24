@@ -44,10 +44,9 @@ class _ChatScreenState extends State<ChatScreen> {
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(otherUserUid).get();
 
-      if (userDoc.exists && userDoc['email'] != null) {
+      if (userDoc.exists && userDoc['email'] != null && mounted) {
         setState(() {
-          _participantName =
-              userDoc['email']; // Update UI with other user's name
+          _participantName = userDoc['email'];
         });
       }
     }

@@ -19,7 +19,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _currentChatId;
   bool _waitingForMatch = false;
-  late StreamSubscription<DocumentSnapshot> _chatSubscription;
+  StreamSubscription<DocumentSnapshot>? _chatSubscription;
 
   @override
   void initState() {
@@ -29,8 +29,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
   @override
   void dispose() {
-    _chatSubscription
-        .cancel(); // ✅ Cancel stream to avoid setState after dispose
+    _chatSubscription?.cancel();
     super.dispose();
   }
 
@@ -177,6 +176,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           await queueRef.set({
             'uid': currentUid,
             'timestamp': FieldValue.serverTimestamp(),
+            'category': 'General', // ✅ Add category field
           });
           print("✅ Successfully added $currentUid to chat_queue.");
         } catch (e) {
