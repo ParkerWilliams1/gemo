@@ -226,7 +226,12 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_waitingForMatch) {
-      return WaitingForMatchScreen();
+      return WaitingForMatchScreen(
+        category: 'General',
+        onCancel: () {
+          setState(() => _waitingForMatch = false);
+        },
+      );
     }
 
     return Scaffold(

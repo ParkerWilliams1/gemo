@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gemo/screens/menu_screen.dart'; // Import MenuScreen
+import 'package:gemo/screens/menu_screen.dart';
+import 'package:gemo/matchmaking_service.dart';
+import 'package:gemo/screens/waiting_for_match_screen.dart';
 
-class CategoriesScreen extends StatelessWidget {
-  CategoriesScreen({super.key});
-  
+class CategoriesScreen extends StatefulWidget {
+  const CategoriesScreen({super.key});
+
+  @override
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen> {
+  bool _isMatching = false;
+
   final List<Map<String, dynamic>> categories = [
     {"title": "Pop"},
     {"title": "Rock"},
@@ -13,6 +22,28 @@ class CategoriesScreen extends StatelessWidget {
     {"title": "Classical"},
     {"title": "EDM"},
   ];
+
+  void _startMatching(String category) async {
+    setState(() => _isMatching = true);
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WaitingForMatchScreen(
+          category: category,
+          onCancel: () {
+            Navigator.pop(context); // go back to CategoriesScreen
+            setState(() => _isMatching = false);
+          },
+        ),
+      ),
+    );
+
+    // After matching is complete and user returns, reset state
+    if (mounted) {
+      setState(() => _isMatching = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,60 +59,58 @@ class CategoriesScreen extends StatelessWidget {
           ),
           actions: <Widget>[
             IconButton(
-              padding: EdgeInsets.only(right: 20),
-              icon: Icon(Icons.menu, color: Colors.black, size: 28),
+              padding: const EdgeInsets.only(right: 20),
+              icon: const Icon(Icons.menu, color: Colors.black, size: 28),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MenuScreen()),
+                  MaterialPageRoute(builder: (context) => const MenuScreen()),
                 );
               },
             ),
           ],
           elevation: 1,
         ),
-        body: Column(
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  child: SearchBar(
-                    hintText: 'Search for a specific category',
-                    textStyle: WidgetStateProperty.all(GoogleFonts.inter()),
-                    leading: Icon(Icons.search),
-                    elevation: WidgetStateProperty.all(0.0),
+        body: _isMatching
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        child: SearchBar(
+                          hintText: 'Search for a specific category',
+                          textStyle: WidgetStateProperty.all(GoogleFonts.inter()),
+                          leading: const Icon(Icons.search),
+                          elevation: WidgetStateProperty.all(0.0),
+                        ),
+                      )
+                    ],
                   ),
-                )
-              ],
-            ),
-            // Trending Categories Section
-            _buildCategorySection(context, "Trending Categories"),
-            // Majors Section
-            _buildCategorySection(context, "Majors"),
-            // Interests Section
-            _buildCategorySection(context, "Interests"),
-            // Looking for a tutor Section
-            Padding(
-              padding: const EdgeInsets.only(left: 20, top: 10),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Looking for a tutor?",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  _buildCategorySection(context, "Trending Categories"),
+                  _buildCategorySection(context, "Majors"),
+                  _buildCategorySection(context, "Interests"),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, top: 10),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Looking for a tutor?",
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 15),
+                  _buildTutorMatchBox(),
+                ],
               ),
-            ),
-            SizedBox(height: 15),
-            _buildTutorMatchBox(),
-          ],
-        ),
       ),
     );
   }
@@ -94,13 +123,13 @@ class CategoriesScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               color: Colors.black,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 15),
+          const SizedBox(height: 15),
           SizedBox(
             height: 90,
             width: MediaQuery.of(context).size.width * 0.9,
@@ -109,7 +138,10 @@ class CategoriesScreen extends StatelessWidget {
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final category = categories[index];
-                return CategoryTile(title: category["title"]);
+                return GestureDetector(
+                  onTap: () => _startMatching(category["title"]),
+                  child: CategoryTile(title: category["title"]),
+                );
               },
             ),
           ),
@@ -126,14 +158,14 @@ class CategoriesScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           child: Container(
             width: 300,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
               color: const Color.fromARGB(111, 158, 158, 158),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+              children: const [
                 Text(
                   'Let’s find a match for you',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
@@ -151,7 +183,7 @@ class CategoriesScreen extends StatelessWidget {
 class CategoryTile extends StatelessWidget {
   final String title;
 
-  const CategoryTile({required this.title});
+  const CategoryTile({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -167,12 +199,15 @@ class CategoryTile extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+            child: Center(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
