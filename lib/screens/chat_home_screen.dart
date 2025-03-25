@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:gemo/services/auth_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
-import 'package:gemo/screens/waiting_for_match_screen.dart';
 import 'package:logger/logger.dart';
 import 'package:gemo/screens/categories_screen.dart'; // ✅ Updated to CategoriesScreen
 

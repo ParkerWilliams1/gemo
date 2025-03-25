@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:gemo/screens/chat_search_screen.dart';
 import 'package:gemo/screens/my_chats_screen.dart';
 import 'services/firebase_options.dart';
 import 'screens/splash_screen.dart';
@@ -42,7 +43,9 @@ class MyApp extends StatelessWidget {
         WaitingForMatchScreen.routeName: (context) => const WaitingForMatchScreen(),
         ProfileScreen.routeName: (context) => const ProfileScreen(),
         MyChatsScreen.routeName: (context) => const MyChatsScreen(),
-        TextChatScreen.routeName: (context) => const TextChatScreen(chatId: ''),},
+        TextChatScreen.routeName: (context) => const TextChatScreen(chatId: 'chat_queue'),
+        ChatSearchScreen.routeName: (context) => const ChatSearchScreen(),
+        },
     );
   }
 }

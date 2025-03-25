@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:gemo/services/user_matching.dart';
+import 'package:gemo/services/matchmaking_service.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:gemo/screens/text_chat_screen.dart';
 
 class ChatSearchScreen extends StatefulWidget {
   const ChatSearchScreen({super.key});
+  static const String routeName = '/chatsearch';
 
   @override
   ChatSearchScreenState createState() => ChatSearchScreenState();
@@ -25,7 +25,7 @@ class ChatSearchScreenState extends State<ChatSearchScreen> {
     User? user = _auth.currentUser;
     if (user == null) return;
 
-    _matchmakingService.joinQueue(user.uid);
+    _matchmakingService.joinQueue(user.uid,'chat_queue');
 
     _matchmakingService.addListener(() {
       final matches = _matchmakingService.matches;

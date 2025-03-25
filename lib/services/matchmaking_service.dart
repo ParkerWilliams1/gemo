@@ -5,9 +5,14 @@ import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/waiting_for_match_screen.dart';
 import 'package:logger/logger.dart';
 
-class MatchmakingService {
+class MatchmakingService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final List<String> _queue = [];
+  final List<Map<String, String>> _matches = [];
+  final Logger _logger = Logger(); // Initialize Logger
+
+  List<Map<String, String>> get matches => _matches;
 
   Future<void> startCategoryChat(BuildContext context, String category) async {
     final user = _auth.currentUser;
@@ -89,4 +94,43 @@ class MatchmakingService {
   void leaveQueue(String uid) {
     _firestore.collection('chat_queue').doc(uid).delete();
   }
+
+  
+ void endCall(String userId1, String userId2) {
+    _logger.i("Ending call between $userId1 and $userId2.");
+
+    // Remove the match if it exists
+    final matchIndex = _matches.indexWhere((match) =>
+        (match['user1'] == userId1 && match['user2'] == userId2) ||
+        (match['user1'] == userId2 && match['user2'] == userId1));
+
+    if (matchIndex != -1) {
+      _matches.removeAt(matchIndex);
+      _logger.d("Match between $userId1 and $userId2 removed. Current matches: $_matches");
+    } else {
+      _logger.w("No match found between $userId1 and $userId2.");
+    }
+
+    // Add users back to the queue
+    _queue.add(userId1);
+    _queue.add(userId2);
+    _logger.d("Users $userId1 and $userId2 added back to the queue. Current queue: $_queue");
+
+    _tryMatch();
+  }
+
+  void _tryMatch() {
+    _logger.i("Attempting to match users...");
+    while (_queue.length >= 2) {
+      final user1 = _queue.removeAt(0);
+      final user2 = _queue.removeAt(0);
+      _matches.add({'user1': user1, 'user2': user2});
+      _logger.d("Matched $user1 with $user2. Current matches: $_matches");
+      notifyListeners();
+    }
+    if (_queue.length < 2) {
+      _logger.d("Not enough users in the queue to create a match. Current queue: $_queue");
+    }
+  }
 }
+
