@@ -12,6 +12,7 @@ import 'screens/categories_screen.dart';
 import 'screens/waiting_for_match_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/text_chat_screen.dart';
+import 'video_stream/join_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +33,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: SplashScreen.routeName,
+      // initialRoute: SplashScreen.routeName,
+      initialRoute: JoinScreen.routeName,
       routes: {
         SplashScreen.routeName: (context) => const SplashScreen(),
         HomeScreen.routeName: (context) => const HomeScreen(),
@@ -45,7 +47,8 @@ class MyApp extends StatelessWidget {
         MyChatsScreen.routeName: (context) => const MyChatsScreen(),
         TextChatScreen.routeName: (context) => const TextChatScreen(chatId: 'chat_queue'),
         ChatSearchScreen.routeName: (context) => const ChatSearchScreen(),
-        },
+        JoinScreen.routeName: (context) => JoinScreen(),
+      },
     );
   }
 }
