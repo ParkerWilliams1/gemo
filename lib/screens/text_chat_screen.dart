@@ -3,18 +3,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logger/logger.dart';
 import 'package:gemo/services/user_matching.dart';
-
 import 'chat_home_screen.dart';
 
-class ChatScreen extends StatefulWidget {
+class TextChatScreen extends StatefulWidget {
   final String chatId;
-  const ChatScreen({super.key, required this.chatId});
+  static const String routeName = '/textchat';
+  const TextChatScreen({super.key, required this.chatId});
 
   @override
-  ChatScreenState createState() => ChatScreenState();
+  TextChatScreenState createState() => TextChatScreenState();
 }
 
-class ChatScreenState extends State<ChatScreen> {
+class TextChatScreenState extends State<TextChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -54,10 +54,9 @@ class ChatScreenState extends State<ChatScreen> {
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(otherUserUid).get();
 
-      if (userDoc.exists && userDoc['email'] != null) {
+      if (userDoc.exists && userDoc['email'] != null && mounted) {
         setState(() {
-          _participantName =
-              userDoc['email']; // Update UI with other user's name
+          _participantName = userDoc['email'];
         });
         Logger().i("Participant name fetched: $_participantName");
       } else {

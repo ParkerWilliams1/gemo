@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gemo/services/user_matching.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:gemo/screens/text_chat_screen.dart';
 
 class ChatSearchScreen extends StatefulWidget {
   const ChatSearchScreen({super.key});
@@ -38,7 +39,7 @@ class ChatSearchScreenState extends State<ChatSearchScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatScreen(chatId: chatId),
+            builder: (context) => TextChatScreen(chatId: chatId),
           ),
         );
       }

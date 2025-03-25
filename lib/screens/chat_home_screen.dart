@@ -97,17 +97,13 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ChatScreen(chatId: newChatRef.id)),
+          builder: (context) => TextChatScreen(chatId: newChatRef.id)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (waitingForMatch == true) {
-      return WaitingForMatchScreen();
-    }
-
     return Scaffold(
       body: Container(
         width: double.infinity,
