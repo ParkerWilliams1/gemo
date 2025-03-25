@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logger/logger.dart';
 import 'package:gemo/services/user_matching.dart';
 
-
 import 'chat_home_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -32,12 +31,20 @@ class ChatScreenState extends State<ChatScreen> {
   // Fetch the name of the other participant
   void _fetchParticipantName() async {
     User? user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      Logger().e("🚨 No authenticated user found.");
+      return;
+    }
 
     DocumentSnapshot chatDoc =
         await _firestore.collection('chats').doc(widget.chatId).get();
 
-    if (!chatDoc.exists) return;
+    if (!chatDoc.exists) {
+      Logger().e("🚨 Chat document not found in Firestore.");
+      return;
+    }
+
+    Logger().i("Chat document found: ${chatDoc.data()}");
 
     List<dynamic> participants = chatDoc['participants'];
     String? otherUserUid =
@@ -52,17 +59,28 @@ class ChatScreenState extends State<ChatScreen> {
           _participantName =
               userDoc['email']; // Update UI with other user's name
         });
+        Logger().i("Participant name fetched: $_participantName");
+      } else {
+        Logger().w("Participant document not found or email is null.");
       }
+    } else {
+      Logger().w("No other user found in the chat.");
     }
   }
 
   // Send a message
   void _sendMessage() async {
     String messageText = _messageController.text.trim();
-    if (messageText.isEmpty) return;
+    if (messageText.isEmpty) {
+      Logger().w("Attempted to send an empty message.");
+      return;
+    }
 
     User? user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      Logger().e("🚨 No authenticated user found.");
+      return;
+    }
 
     try {
       await _firestore
@@ -122,7 +140,6 @@ class ChatScreenState extends State<ChatScreen> {
 
     // Find the other user in the chat
     String? otherUserUid =
-       
         participants.firstWhere((id) => id != user.uid, orElse: () => null);
 
     Logger().i("Current user ID: ${user.uid}");
