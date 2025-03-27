@@ -26,7 +26,8 @@ class _SignInScreenState extends State<SignInScreen> {
       String? error = await _authService.signIn(email, password);
 
       if (error != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error)));
       } else {
         // Navigate to HomeScreen upon successful login
         Navigator.pushReplacementNamed(context, HomeScreen.routeName);
@@ -37,6 +38,7 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Background Image
@@ -65,7 +67,8 @@ class _SignInScreenState extends State<SignInScreen> {
           // White Card Container
           Positioned(
             left: 63,
-            top: 287,
+            top: (MediaQuery.of(context).size.height - 338) /
+                2, // Center vertically
             child: Container(
               width: 277,
               height: 338,
@@ -95,7 +98,7 @@ class _SignInScreenState extends State<SignInScreen> {
           // Email Label
           const Positioned(
             left: 93,
-            top: 384,
+            top: 375,
             child: Text(
               'Email',
               style: TextStyle(
@@ -124,7 +127,8 @@ class _SignInScreenState extends State<SignInScreen> {
                 controller: _emailController,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
             ),
@@ -132,7 +136,7 @@ class _SignInScreenState extends State<SignInScreen> {
           // Password Label
           const Positioned(
             left: 93,
-            top: 448,
+            top: 439,
             child: Text(
               'Password',
               style: TextStyle(
@@ -162,7 +166,8 @@ class _SignInScreenState extends State<SignInScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
             ),
@@ -237,7 +242,8 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
-                        Navigator.pushReplacementNamed(context, SignUpScreen.routeName);
+                        Navigator.pushReplacementNamed(
+                            context, SignUpScreen.routeName);
                       },
                   ),
                 ],
