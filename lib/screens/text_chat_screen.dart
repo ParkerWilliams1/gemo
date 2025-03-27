@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'chat_home_screen.dart';
+import 'report_screen.dart'; 
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
@@ -18,16 +19,17 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  String _participantName = "Chat"; // Default title
+  String _participantName = "Chat";
+  String? _otherUserUid;
 
   @override
   void initState() {
     super.initState();
-    _fetchParticipantName();
+    _fetchParticipantInfo();
   }
 
-  // Fetch the name of the other participant
-  void _fetchParticipantName() async {
+  // Fetch the other participant's name and ID
+  void _fetchParticipantInfo() async {
     User? user = _auth.currentUser;
     if (user == null) return;
 
@@ -47,9 +49,21 @@ class _ChatScreenState extends State<ChatScreen> {
       if (userDoc.exists && userDoc['email'] != null && mounted) {
         setState(() {
           _participantName = userDoc['email'];
+          _otherUserUid = otherUserUid;
         });
       }
     }
+  }
+
+  
+  void _reportUser() {
+    if (_otherUserUid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No user to report.')),
+      );
+      return;
+    }
+    ReportingSystem().showReportDialog(context, _otherUserUid!);
   }
 
   // Send a message
@@ -108,7 +122,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String? otherUserUid =
         participants.firstWhere((id) => id != user.uid, orElse: () => null);
 
-    // 🔹 Step 1: Reset the current user's chat status
+    // Reset the current user's chat status
     await userRef.update({
       "currentChat": null,
       "matchable": true,
@@ -116,7 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     print("✅ Current user ${user.uid} is now matchable again.");
 
-    // 🔹 Step 2: If there's another participant, reset their status too
+    // If there's another participant, reset their status too
     if (otherUserUid != null) {
       DocumentReference otherUserRef =
           _firestore.collection('users').doc(otherUserUid);
@@ -127,14 +141,14 @@ class _ChatScreenState extends State<ChatScreen> {
       print("✅ Other user ($otherUserUid) is now matchable again.");
     }
 
-    // 🔹 Step 3: Remove user from chat participants
+    // Remove user from chat participants
     await chatRef.update({
       "participants": FieldValue.arrayRemove([user.uid]),
     });
 
     print("✅ User ${user.uid} left the chat.");
 
-    // 🔹 Step 4: Navigate back to ChatHomeScreen instead of popping
+    // Navigate back to ChatHomeScreen
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ChatHomeScreen()),
@@ -150,6 +164,10 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Colors.white,
         elevation: 1,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.report, color: Colors.red),
+          onPressed: _reportUser, // Report button in the top left
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app, color: Colors.black),
