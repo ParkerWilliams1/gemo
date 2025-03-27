@@ -48,6 +48,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Background Image
@@ -99,7 +100,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           // Email Label
           const Positioned(
             left: 93,
-            top: 384,
+            top: 375,
             child: Text(
               'Email',
               style: TextStyle(
@@ -141,7 +142,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           // Password Label
           const Positioned(
             left: 93,
-            top: 448,
+            top: 439,
             child: Text(
               'Password',
               style: TextStyle(

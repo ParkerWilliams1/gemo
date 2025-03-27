@@ -28,20 +28,18 @@ class SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Welcome to Gemo!'),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 225, 127, 0),
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Image.asset('lib/images/gemo.png', width: 100, height: 100),
-            const SizedBox(height: 20),
-            const Text(
-              'Welcome to Gemo!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: Image.asset(
+                'lib/images/gemo.png',
+                width: 200,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
             ),
           ],
         ),
