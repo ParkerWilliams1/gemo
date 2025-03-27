@@ -67,8 +67,7 @@ class _SignInScreenState extends State<SignInScreen> {
           // White Card Container
           Positioned(
             left: 63,
-            top: (MediaQuery.of(context).size.height - 338) /
-                2, // Center vertically
+            top: 287, // Center vertically
             child: Container(
               width: 277,
               height: 338,
