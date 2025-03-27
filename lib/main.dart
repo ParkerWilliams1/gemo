@@ -27,8 +27,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       debugShowCheckedModeBanner: false,
-      // initialRoute: SplashScreen.routeName,
-      initialRoute: JoinScreen.routeName,
+      initialRoute: SplashScreen.routeName,
+      // initialRoute: JoinScreen.routeName,
       routes: {
         SplashScreen.routeName: (context) => const SplashScreen(),
         HomeScreen.routeName: (context) => const HomeScreen(),

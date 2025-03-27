@@ -48,34 +48,114 @@ class JoinScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gemo'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () => onCreateButtonPressed(context),
-              child: const Text('Create Meeting'),
-            ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
-              child: TextField(
-                decoration: const InputDecoration(
-                  hintText: 'Meeting Id',
-                  border: OutlineInputBorder(),
-                ),
-                controller: _meetingIdController,
+      body: Stack(
+        children: [
+          // Background image (same as home screen)
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/images/HomeScreen.png'),
+                fit: BoxFit.cover,
               ),
             ),
-            ElevatedButton(
-              onPressed: () => onJoinButtonPressed(context),
-              child: const Text('Join Meeting'),
+          ),
+          
+          // Main content column
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Title
+                const Text(
+                  'Video Chat',
+                  style: TextStyle(
+                    color: Color(0xFF707070),
+                    fontSize: 62,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                
+                SizedBox(height: 40),
+                
+                // Create Meeting Button (matches New Chat button style)
+                Container(
+                  width: 247,
+                  height: 91,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF83B9FF),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextButton(
+                    onPressed: () => onCreateButtonPressed(context),
+                    child: const Text(
+                      'Create Meeting',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 24,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 30),
+                
+                // Meeting ID Input Field (styled to match)
+                Container(
+                  width: 247,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter Meeting ID',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                      hintStyle: TextStyle(
+                        color: Color(0xFF707070),
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    controller: _meetingIdController,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 30),
+                
+                // Join Meeting Button (matches Video Chat button style)
+                Container(
+                  width: 247,
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFA5D6A7), // Same green as Video Chat button
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextButton(
+                    onPressed: () => onJoinButtonPressed(context),
+                    child: const Text(
+                      'Join Meeting',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

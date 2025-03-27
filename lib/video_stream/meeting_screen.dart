@@ -53,41 +53,44 @@ class _MeetingScreenState extends State<MeetingScreen> {
     }
   }
 
-  // listening to meeting events
-  void setMeetingEventListener() {
-    _room.on(Events.roomJoined, () {
-      setState(() {
-        participants.putIfAbsent(
-            _room.localParticipant.id, () => _room.localParticipant);
-      });
+void setMeetingEventListener() {
+  _room.on(Events.roomJoined, () {
+    setState(() {
+      participants.putIfAbsent(
+          _room.localParticipant.id, () => _room.localParticipant);
     });
+  });
 
-    _room.on(
-      Events.participantJoined,
-      (Participant participant) {
-        setState(
-          () => participants.putIfAbsent(participant.id, () => participant),
-        );
-      },
-    );
+  _room.on(
+    Events.participantJoined,
+    (Participant participant) {
+      setState(
+        () => participants.putIfAbsent(participant.id, () => participant),
+      );
+    },
+  );
 
-    _room.on(Events.participantLeft, (String participantId) {
-      if (participants.containsKey(participantId)) {
-        setState(
-          () => participants.remove(participantId),
-        );
-      }
-    });
+  _room.on(Events.participantLeft, (String participantId) {
+    if (participants.containsKey(participantId)) {
+      setState(() => participants.remove(participantId));
+    }
+  });
 
-    _room.on(Events.roomLeft, () {
+  _room.on(Events.roomLeft, () {
+    if (mounted) {
       participants.clear();
-      Navigator.popUntil(context, ModalRoute.withName('/'));
-    });
-  }
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/home', // Your HomeScreen route
+        (Route<dynamic> route) => false,
+      );
+    }
+  });
+}
 
   // onbackButton pressed leave the room
   Future<bool> _onWillPop() async {
     _room.leave();
+    _room.end();
     return true;
   }
 

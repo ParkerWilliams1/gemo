@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 //Auth token we will use to generate a meeting and connect to it
-String token = "VIDEOSDK_TOKEN_GOES_HERE";
+String token = "YOUR_API_HERE";
 
 // API call to create meeting
 Future<String> createMeeting() async {
