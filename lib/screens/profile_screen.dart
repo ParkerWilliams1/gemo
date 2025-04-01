@@ -48,10 +48,10 @@ class ProfileScreen extends StatefulWidget {
     this.password = '',
   });
 
-  _ProfileScreenState createState() => _ProfileScreenState();
+  ProfileScreenState createState() => ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController firstNameController;
   late TextEditingController lastNameController;
   late TextEditingController majorController;

@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:logging/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,12 +10,13 @@ import 'package:gemo/video_stream/join_screen.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
+  const ChatHomeScreen({super.key});
 
   @override
-  _ChatHomeScreenState createState() => _ChatHomeScreenState();
+  ChatHomeScreenState createState() => ChatHomeScreenState();
 }
 
-class _ChatHomeScreenState extends State<ChatHomeScreen> {
+class ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _currentChatId;
@@ -44,7 +45,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         _firestore.collection('chat_queue').doc(currentUser.uid);
 
     await queueRef.delete().catchError((e) {
-      print("ℹ️ No existing queue entry for cleanup.");
+      Logger("ℹ️ No existing queue entry for cleanup.");
     });
 
     // ✅ Remove user from the queue on app startup to avoid stale entries
@@ -52,7 +53,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       DocumentSnapshot queueSnapshot = await transaction.get(queueRef);
       if (queueSnapshot.exists && queueSnapshot['uid'] == currentUser.uid) {
         transaction.delete(queueRef);
-        print("🗑 Removed stale queue entry for user ${currentUser.uid}");
+        Logger("🗑 Removed stale queue entry for user ${currentUser.uid}");
       }
     });
 
@@ -62,7 +63,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       "matchable": true,
     });
 
-    print("🔄 Reset chat state on app start.");
+    Logger("🔄 Reset chat state on app start.");
   }
 
   Future<void> _matchUsers(String user1Uid, String user2Uid,
@@ -74,7 +75,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     if (!user2Doc.exists ||
         user2Doc['matchable'] == false ||
         user2Doc['currentChat'] != null) {
-      print(
+      Logger(
           "🚨 User $user2Uid is no longer available for matching. Removing from queue...");
       await queueRef.delete();
       return;
@@ -87,7 +88,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       "chatStatus": "active"
     });
 
-    print("✅ New chat created: ${newChatRef.id}");
+    Logger("✅ New chat created: ${newChatRef.id}");
 
     // Update both users' chat references
     await user1Ref.update({"currentChat": newChatRef.id, "matchable": false});
@@ -104,7 +105,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
-      print("🚨 ERROR: No user is logged in.");
+      Logger("🚨 ERROR: No user is logged in.");
       return;
     }
 
@@ -115,9 +116,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     // Step 1: Clean up any stale queue entry for the current user
     try {
       await queueRef.delete();
-      print("🧹 Cleared old queue entry for $currentUid.");
+      Logger("🧹 Cleared old queue entry for $currentUid.");
     } catch (e) {
-      print("ℹ️ No previous queue entry to delete for $currentUid.");
+      Logger("ℹ️ No previous queue entry to delete for $currentUid.");
     }
 
     // Step 2: Search for another user in the queue (excluding current user)
@@ -136,12 +137,12 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         if (matchedData == null ||
             matchedData['uid'] == null ||
             matchedData['uid'].toString().isEmpty) {
-          print("❌ ERROR: Matched document missing 'uid' field.");
+          Logger("❌ ERROR: Matched document missing 'uid' field.");
           return;
         }
 
         final String matchedUid = matchedData['uid'];
-        print("🎯 Match found! Matched with user $matchedUid");
+        Logger("🎯 Match found! Matched with user $matchedUid");
 
         final matchedUserRef = _firestore.collection('users').doc(matchedUid);
         final matchedQueueRef =
@@ -165,13 +166,13 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         await queueRef.delete();
         await matchedQueueRef.delete();
 
-        print(
+        Logger(
             "✅ Chat created between $currentUid and $matchedUid. Chat ID: ${newChatRef.id}");
 
         _listenForChatUpdates();
       } else {
         // No match found — add current user to queue
-        print("📥 No match found. Adding $currentUid to queue...");
+        Logger("📥 No match found. Adding $currentUid to queue...");
 
         try {
           await queueRef.set({
@@ -179,16 +180,16 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
             'timestamp': FieldValue.serverTimestamp(),
             'category': 'General', // ✅ Add category field
           });
-          print("✅ Successfully added $currentUid to chat_queue.");
+          Logger("✅ Successfully added $currentUid to chat_queue.");
         } catch (e) {
-          print("🚨 Failed to add user to chat_queue: $e");
+          Logger("🚨 Failed to add user to chat_queue: $e");
         }
 
-        print("✅ User $currentUid added to chat_queue.");
+        Logger("✅ User $currentUid added to chat_queue.");
         _listenForChatUpdates();
       }
     } catch (e) {
-      print("🚨 Firestore error during matchmaking: $e");
+      Logger("🚨 Firestore error during matchmaking: $e");
     }
   }
 

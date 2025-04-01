@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logging/logging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Video Chat',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const VideoChatScreen(peerUserId: '12345', chatId: '12345',),
+      home: const VideoChatScreen(
+        peerUserId: '12345',
+        chatId: '12345',
+      ),
     );
   }
 }
@@ -38,7 +42,8 @@ class ReportingSystem {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void showReportDialog(BuildContext context, String reportedUserId, {String? chatId}) {
+  void showReportDialog(BuildContext context, String reportedUserId,
+      {String? chatId}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -53,12 +58,13 @@ class ReportingSystem {
     );
   }
 
-  Future<bool> _submitReport(BuildContext context, Map<String, dynamic> reportData) async {
+  Future<bool> _submitReport(
+      BuildContext context, Map<String, dynamic> reportData) async {
     try {
       await _firestore.collection('reports').add(reportData);
       return true;
     } catch (e) {
-      print('Error submitting report: $e');
+      Logger('Error submitting report: $e');
       return false;
     }
   }
@@ -77,10 +83,10 @@ class ReportForm extends StatefulWidget {
   });
 
   @override
-  _ReportFormState createState() => _ReportFormState();
+  ReportFormState createState() => ReportFormState();
 }
 
-class _ReportFormState extends State<ReportForm> {
+class ReportFormState extends State<ReportForm> {
   String? _selectedCategory;
   final TextEditingController _descriptionController = TextEditingController();
   bool _isSubmitting = false;
@@ -131,14 +137,19 @@ class _ReportFormState extends State<ReportForm> {
     });
 
     if (success) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Report submitted successfully')),
-      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Report submitted successfully')),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to submit report. Please try again.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Failed to submit report. Please try again.')),
+        );
+      }
     }
   }
 
@@ -217,7 +228,8 @@ class VideoChatScreen extends StatelessWidget {
   final String peerUserId;
   final String chatId; // New parameter to track chat ID
 
-  const VideoChatScreen({super.key, required this.peerUserId, required this.chatId});
+  const VideoChatScreen(
+      {super.key, required this.peerUserId, required this.chatId});
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +241,8 @@ class VideoChatScreen extends StatelessWidget {
             icon: const Icon(Icons.report_problem),
             color: Colors.red,
             onPressed: () {
-              ReportingSystem().showReportDialog(context, peerUserId, chatId: chatId);
+              ReportingSystem()
+                  .showReportDialog(context, peerUserId, chatId: chatId);
             },
           ),
         ],

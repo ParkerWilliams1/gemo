@@ -9,10 +9,10 @@ class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  SignUpScreenState createState() => SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -24,23 +24,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     // Email must end in .edu
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email)) {
-      setState(() {
-        _emailError = "Please enter a valid .edu email address";
-      });
+      if (mounted) {
+        setState(() {
+          _emailError = "Please enter a valid .edu email address";
+        });
+      }
       return;
     } else {
-      setState(() {
-        _emailError = null;
-      });
+      if (mounted) {
+        setState(() {
+          _emailError = null;
+        });
+      }
     }
 
     if (email.isNotEmpty && password.isNotEmpty) {
       String? error = await _authService.signUp(email, password);
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Verification email sent! Check your inbox.")));
+      if (mounted) {
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text("Verification email sent! Check your inbox.")),
+          );
+        }
       }
     }
   }
@@ -131,8 +141,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: _emailController,
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      errorText: _emailError, // Show error message if email is invalid
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      errorText:
+                          _emailError, // Show error message if email is invalid
                     ),
                   ),
                 ),
@@ -171,7 +183,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
             ),
@@ -235,7 +248,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
-                        Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+                        Navigator.pushReplacementNamed(
+                            context, SignInScreen.routeName);
                       },
                   ),
                 ],
