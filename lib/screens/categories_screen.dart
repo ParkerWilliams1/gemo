@@ -15,12 +15,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   bool _isMatching = false;
 
   final List<Map<String, dynamic>> categories = [
-    {"title": "Pop"},
-    {"title": "Rock"},
-    {"title": "Hip-Hop"},
-    {"title": "Jazz"},
-    {"title": "Classical"},
-    {"title": "EDM"},
+    {"title": "Music"},
+    {"title": "Gaming"},
+    {"title": "Movies"},
+    {"title": "Sports"},
+    {"title": "Travel"},
+    {"title": "Fitness"},
+    {"title": "Fashion"},
+    {"title": "Food"},
+    {"title": "Photography"},
+    {"title": "Health"},
+    {"title": "Business"},
+    {"title": "Finance"},
   ];
 
 void _startMatching(String category) async {

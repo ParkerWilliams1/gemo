@@ -24,6 +24,13 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.0.0
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/images/gemo.png
+  android: true
+  ios: true
 
 flutter:
   uses-material-design: true
