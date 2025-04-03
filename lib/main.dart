@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_home_screen.dart';
 import 'screens/sign_in_screen.dart';
@@ -27,10 +26,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: SplashScreen.routeName,
-      // initialRoute: JoinScreen.routeName,
+      initialRoute: SignInScreen.routeName,
       routes: {
-        SplashScreen.routeName: (context) => const SplashScreen(),
         HomeScreen.routeName: (context) => const HomeScreen(),
         ChatHomeScreen.routeName: (context) => ChatHomeScreen(),
         SignInScreen.routeName: (context) => const SignInScreen(),

@@ -45,7 +45,7 @@ class SignInScreenState extends State<SignInScreen> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('lib/images/background.png'),
+                image: AssetImage('assets/background.png'),
                 fit: BoxFit.cover,
               ),
             ),
