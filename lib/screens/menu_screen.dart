@@ -30,7 +30,8 @@ class MenuScreen extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.23),
+        padding:
+            EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.23),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -42,7 +43,8 @@ class MenuScreen extends StatelessWidget {
                 print("Navigating to My Chats...");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const MyChatsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const MyChatsScreen()),
                 );
               },
             ),
@@ -55,15 +57,7 @@ class MenuScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(
-                      firstName: "Grace",
-                      lastName: "Bergquist",
-                      major: "Computer Science",
-                      subjects: "Math, Physics",
-                      username: "graceb",
-                      email: "grace@example.com",
-                      password: "password123",
-                    ),
+                    builder: (context) => const ProfileScreen(),
                   ),
                 );
               },
@@ -76,7 +70,8 @@ class MenuScreen extends StatelessWidget {
                 print("Navigating to Settings...");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsScreen()),
                 );
               },
             ),
