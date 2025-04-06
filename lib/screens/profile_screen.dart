@@ -48,6 +48,7 @@ class ProfileScreen extends StatefulWidget {
     this.password = '',
   });
 
+  @override
   ProfileScreenState createState() => ProfileScreenState();
 }
 

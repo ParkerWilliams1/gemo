@@ -6,7 +6,7 @@ import 'package:gemo/screens/profile_screen.dart'; // Import ProfileScreen
 import 'package:gemo/screens/settings_screen.dart'; // Import SettingsScreen
 
 class MenuScreen extends StatelessWidget {
-  const MenuScreen({super.key});
+  const MenuScreen({super.key,});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,8 @@ class MenuScreen extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.23),
+        padding:
+            EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.23),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -43,7 +44,8 @@ class MenuScreen extends StatelessWidget {
                 Logger("Navigating to My Chats...");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const MyChatsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const MyChatsScreen()),
                 );
               },
             ),
@@ -57,13 +59,13 @@ class MenuScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const ProfileScreen(
-                      firstName: "Grace",
-                      lastName: "Bergquist",
-                      major: "Computer Science",
-                      subjects: "Math, Physics",
-                      username: "graceb",
-                      email: "grace@example.com",
-                      password: "password123",
+                      firstName: 'firstName',
+                      lastName: 'lastName',
+                      major: 'major',
+                      subjects: 'subjects',
+                      username: 'username',
+                      email: 'email',
+                      password: 'password',
                     ),
                   ),
                 );
@@ -77,7 +79,8 @@ class MenuScreen extends StatelessWidget {
                 Logger("Navigating to Settings...");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsScreen()),
                 );
               },
             ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/matchmaking_service.dart';
-import 'package:gemo/screens/waiting_for_match_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -14,27 +13,50 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   bool _isMatching = false;
 
-  final List<Map<String, dynamic>> categories = [
-    {"title": "Music"},
-    {"title": "Gaming"},
-    {"title": "Movies"},
-    {"title": "Sports"},
-    {"title": "Travel"},
-    {"title": "Fitness"},
-    {"title": "Fashion"},
-    {"title": "Food"},
-    {"title": "Photography"},
-    {"title": "Health"},
-    {"title": "Business"},
-    {"title": "Finance"},
-  ];
+  final Map<String, Color> categories = {
+    "Music": Colors.blue,
+    "Gaming": Colors.green,
+    "Movies": Colors.red,
+    "Sports": Colors.orange,
+    "Travel": Colors.purple,
+    "Fitness": Colors.yellow,
+    "Fashion": Colors.teal,
+    "Food": Colors.pink,
+    "Photography": Colors.cyan,
+    "Health": Colors.indigo,
+    "Business": Colors.lime,
+    "Finance": Colors.amber,
+  };
 
-void _startMatching(String category) async {
-  setState(() => _isMatching = true);
-  await MatchmakingService().startCategoryChat(context, category);
-  if (mounted) setState(() => _isMatching = false);
-}
+  final Map<String, Color> majors = {
+    "Electrical Engineering": Colors.red,
+    "Calculus": Colors.amber,
+    "Physics": Colors.teal,
+    "Chemistry": Colors.pink,
+    "Economics": Colors.cyan,
+    "Psychology": Colors.indigo,
+    "History": Colors.lime,
+    "Computer Science": Colors.blue,
+    "Mechanical Engineering": Colors.green,
+    "Civil Engineering": Colors.orange,
+    "Chemical Engineering": Colors.purple,
+    "Bio Engineering": Colors.yellow,
+  };
 
+  // Getter to convert the majors map into a list of maps
+  List<Map<String, dynamic>> get categoriesList => categories.entries
+      .map((entry) => {"title": entry.key, "color": entry.value})
+      .toList();
+
+  List<Map<String, dynamic>> get majorsList => majors.entries
+      .map((entry) => {"title": entry.key, "color": entry.value})
+      .toList();
+
+  void _startMatching(String category) async {
+    setState(() => _isMatching = true);
+    await MatchmakingService().startCategoryChat(context, category);
+    if (mounted) setState(() => _isMatching = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,51 +84,67 @@ void _startMatching(String category) async {
           ],
           elevation: 1,
         ),
-        body: _isMatching
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.9,
-                        child: SearchBar(
-                          hintText: 'Search for a specific category',
-                          textStyle: WidgetStateProperty.all(GoogleFonts.inter()),
-                          leading: const Icon(Icons.search),
-                          elevation: WidgetStateProperty.all(0.0),
-                        ),
-                      )
-                    ],
-                  ),
-                  _buildCategorySection(context, "Trending Categories"),
-                  _buildCategorySection(context, "Majors"),
-                  _buildCategorySection(context, "Interests"),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20, top: 10),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Looking for a tutor?",
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+        body: Stack(children: [
+          // Background Image
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(
+                    'assets/HomeScreen.png'), // Correct path to your image
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          _isMatching
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.9,
+                          child: SearchBar(
+                            hintText: 'Search for a specific category',
+                            textStyle:
+                                WidgetStateProperty.all(GoogleFonts.inter()),
+                            leading: const Icon(Icons.search),
+                            elevation: WidgetStateProperty.all(0.0),
+                          ),
+                        )
+                      ],
+                    ),
+                    _buildCategorySection(
+                        context, "Trending Categories", categoriesList),
+                    _buildCategorySection(context, "Majors", majorsList),
+                    _buildCategorySection(
+                        context, "All Categories", categoriesList),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 10),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Looking for a tutor?",
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                  _buildTutorMatchBox(),
-                ],
-              ),
+                    const SizedBox(height: 15),
+                    _buildTutorMatchBox(),
+                  ],
+                ),
+        ]),
       ),
     );
   }
 
-  Widget _buildCategorySection(BuildContext context, String title) {
+  Widget _buildCategorySection(
+      BuildContext context, String title, List<Map<String, dynamic>> items) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       child: Column(
@@ -126,12 +164,15 @@ void _startMatching(String category) async {
             width: MediaQuery.of(context).size.width * 0.9,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
+              itemCount: items.length,
               itemBuilder: (context, index) {
-                final category = categories[index];
+                final item = items[index];
                 return GestureDetector(
-                  onTap: () => _startMatching(category["title"]),
-                  child: CategoryTile(title: category["title"]),
+                  onTap: () => _startMatching(item["title"]),
+                  child: CategoryTile(
+                    title: item["title"],
+                    color: item["color"], // Use the color from the list
+                  ),
                 );
               },
             ),
@@ -159,7 +200,10 @@ void _startMatching(String category) async {
               children: const [
                 Text(
                   'Let’s find a match for you',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
                 ),
                 Icon(Icons.arrow_forward_ios, size: 14, color: Colors.black),
               ],
@@ -173,8 +217,9 @@ void _startMatching(String category) async {
 
 class CategoryTile extends StatelessWidget {
   final String title;
+  final Color color; // Add a color parameter
 
-  const CategoryTile({super.key, required this.title});
+  const CategoryTile({super.key, required this.title, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +230,7 @@ class CategoryTile extends StatelessWidget {
         child: Container(
           width: 110,
           decoration: BoxDecoration(
-            color: const Color.fromARGB(111, 158, 158, 158),
+            color: color, // Use the passed color
             borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(

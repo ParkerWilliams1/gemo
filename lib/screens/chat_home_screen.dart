@@ -66,7 +66,7 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
     Logger("🔄 Reset chat state on app start.");
   }
 
-  Future<void> _matchUsers(String user1Uid, String user2Uid,
+  Future<void> matchUsers(String user1Uid, String user2Uid,
       DocumentReference queueRef, DocumentReference user1Ref) async {
     DocumentReference user2Ref = _firestore.collection('users').doc(user2Uid);
     DocumentSnapshot user2Doc = await user2Ref.get();
@@ -242,7 +242,7 @@ Widget build(BuildContext context) {
         Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('lib/images/HomeScreen.png'),
+              image: AssetImage('assets/HomeScreen.png'),
               fit: BoxFit.cover,
             ),
           ),
