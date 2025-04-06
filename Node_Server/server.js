@@ -39,6 +39,45 @@ app.get('/api/token', async (req, res) => {
   }
 });
 
+// Route to create a room using the generated token
+app.post('/api/create-room', async (req, res) => {
+  const options = {
+    expiresIn: '120m',
+    algorithm: 'HS256',
+  };
+
+  const payload = {
+    apikey: API_KEY,
+    permissions: ['allow_join'], // `ask_join` || `allow_mod`
+  };
+
+  try {
+    // Generate the token
+    const token = jwt.sign(payload, SECRET, options);
+
+    // Use the token in the Authorization header
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        "Authorization": `${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "customRoomId": "aaa-bbb-ccc",
+      }),
+    };
+
+    const url = `https://api.videosdk.live/v2/rooms`;
+    const response = await fetch(url, requestOptions);
+    const data = await response.json();
+
+    // Send the response back to the client
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create room', details: err.message });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
