@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/matchmaking_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logging/logging.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
+  State<CategoriesScreen> createState() => CategoriesScreenState();
 }
 
-class _CategoriesScreenState extends State<CategoriesScreen> {
+class CategoriesScreenState extends State<CategoriesScreen> {
   bool _isMatching = false;
 
-  final Map<String, Color> categories = {
+  final Map<String, Color> interests = {
     "Music": Colors.blue,
     "Gaming": Colors.green,
     "Movies": Colors.red,
@@ -43,20 +45,59 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     "Bio Engineering": Colors.yellow,
   };
 
-  // Getter to convert the majors map into a list of maps
-  List<Map<String, dynamic>> get categoriesList => categories.entries
-      .map((entry) => {"title": entry.key, "color": entry.value})
-      .toList();
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  List<Map<String, dynamic>> get majorsList => majors.entries
-      .map((entry) => {"title": entry.key, "color": entry.value})
-      .toList();
+  Future<List<Map<String, dynamic>>> get trendingCategories async {
+    try {
+      // Fetch the top 3 most clicked categories from Firestore
+      final querySnapshot = await _firestore
+
+/////////////////////////////////////////////////////////////////////////////////////
+          .collection('categories') // Replace with your Firestore collection name
+////////////////////////////////////////////////////////////////////////////////////
+
+          .orderBy('clicks', descending: true)
+          .limit(3)
+          .get();
+
+      final List<Map<String, dynamic>> trendingData = querySnapshot.docs.map((doc) {
+        return {
+          "title": doc['title'],
+          "clicks": doc['clicks'],
+        };
+      }).toList();
+
+      // Assign colors based on rank
+      for (int i = 0; i < trendingData.length; i++) {
+        if (i == 0) {
+          trendingData[i]["color"] = const Color(0xFFFFD700); // Gold
+        } else if (i == 1) {
+          trendingData[i]["color"] = const Color(0xFFC0C0C0); // Silver
+        } else if (i == 2) {
+          trendingData[i]["color"] = const Color(0xFFCD7F32); // Bronze
+        }
+      }
+
+      return trendingData;
+    } catch (e) {
+      Logger("Error fetching trending categories: $e");
+      return [];
+    }
+  }
 
   void _startMatching(String category) async {
     setState(() => _isMatching = true);
     await MatchmakingService().startCategoryChat(context, category);
     if (mounted) setState(() => _isMatching = false);
   }
+
+    List<Map<String, dynamic>> get interestsList => interests.entries
+      .map((entry) => {"title": entry.key, "color": entry.value})
+      .toList();
+
+  List<Map<String, dynamic>> get majorsList => majors.entries
+      .map((entry) => {"title": entry.key, "color": entry.value})
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -90,54 +131,75 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             decoration: BoxDecoration(
               image: DecorationImage(
                 image: AssetImage(
-                    'assets/HomeScreen.png'), // Correct path to your image
+                    'assets/HomeScreen.png'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          _isMatching
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                  children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          child: SearchBar(
-                            hintText: 'Search for a specific category',
-                            textStyle:
-                                WidgetStateProperty.all(GoogleFonts.inter()),
-                            leading: const Icon(Icons.search),
-                            elevation: WidgetStateProperty.all(0.0),
-                          ),
-                        )
-                      ],
+          if (_isMatching)
+            const Center(child: CircularProgressIndicator())
+          else
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: trendingCategories,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error loading trending categories.',
+                      style: GoogleFonts.inter(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    _buildCategorySection(
-                        context, "Trending Categories", categoriesList),
-                    _buildCategorySection(context, "Majors", majorsList),
-                    _buildCategorySection(
-                        context, "All Categories", categoriesList),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 10),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "Looking for a tutor?",
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                  );
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 10),
+                    child: Text(
+                      'No trending categories yet.',
+                      style: GoogleFonts.inter(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                } else {
+                  return Column(
+                    children: [
+                      _buildCategorySection(
+                        context,
+                        "Trending Categories",
+                        snapshot.data!,
+                      ),
+                      _buildCategorySection(context, "Majors", majorsList),
+                      _buildCategorySection(
+                          context, "All Interests", interestsList),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "Looking for a tutor?",
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 15),
-                    _buildTutorMatchBox(),
-                  ],
-                ),
+                      const SizedBox(height: 15),
+                      _buildTutorMatchBox(),
+                    ],
+                  );
+                }
+              },
+            ),
         ]),
       ),
     );

@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'package:logging/logging.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:gemo/screens/categories_screen.dart';
 
 class Category {
   String name;
@@ -63,6 +60,18 @@ void heapSort(List<Category> arr) {
   }
 }
 
+// Update Firestore with Click Count
+Future<void> updateCategoryClicks(String categoryName, int newClicks) async {
+  try {
+    await FirebaseFirestore.instance
+        .collection('categories')
+        .doc(categoryName) // Assuming the document ID is the category name
+        .update({'clicks': newClicks});
+  } catch (e) {
+    Logger('Error updating clicks for $categoryName: $e');
+  }
+}
+
 // Usage Example
 void main() async {
   List<Category> categories = await fetchCategories();
@@ -70,6 +79,9 @@ void main() async {
 
   for (var category in categories) {
     Logger('${category.name}: ${category.clicks} clicks');
+    // Simulate a click and update Firestore
+    category.clicks += 1; // Increment clicks
+    await updateCategoryClicks(category.name, category.clicks);
   }
 }
 
