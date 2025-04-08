@@ -26,7 +26,8 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
   }
 
   /// Update a specific field or set of fields in Firestore and local state
-  Future<void> updateProfile({String? name, int? age, String? major, bool? isTutor}) async {
+  Future<void> updateProfile(
+      {String? name, int? age, String? major, bool? isTutor}) async {
     final user = _auth.currentUser;
     if (user == null || state is! AsyncData) return;
 
@@ -39,12 +40,15 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
       email: currentProfile.email,
       schoolDomain: currentProfile.schoolDomain,
       createdAt: currentProfile.createdAt,
-      major: currentProfile.major,
-      isTutor: currentProfile.isTutor,
+      major: major ?? currentProfile.major, // use new major
+      isTutor: isTutor ?? currentProfile.isTutor, // use new isTutor
     );
 
     // Update Firestore
-    await _firestore.collection('users').doc(user.uid).update(updatedProfile.toMap());
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .update(updatedProfile.toMap());
 
     // Update local state
     state = AsyncValue.data(updatedProfile);

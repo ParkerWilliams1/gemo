@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemo/providers/user_profile_provider.dart';
 import '../providers/user_profile_notifier.dart';
+import 'package:gemo/constants/majors.dart';
+
 
 class ProfileScreen extends ConsumerStatefulWidget {
   static const routeName = '/profile';
@@ -32,31 +34,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String? selectedMajor;
   bool isTutor = false;
 
-  final List<String> majors = [
-    'Computer Science',
-    'Biology',
-    'Business',
-    'Chemistry',
-    'Communications',
-    'Economics',
-    'Education',
-    'Engineering',
-    'English',
-    'Environmental Science',
-    'Finance',
-    'Graphic Design',
-    'History',
-    'Mathematics',
-    'Marketing',
-    'Nursing',
-    'Physics',
-    'Political Science',
-    'Psychology',
-    'Sociology',
-    'Theater',
-    'Undeclared',
-  ];
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -65,7 +42,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       nameController.text = p.name;
       ageController.text = p.age?.toString() ?? '';
       majorController.text = p.major ?? '';
-      selectedMajor = majors.contains(p.major) ? p.major : null;
+      selectedMajor = majorsList.contains(p.major) ? p.major : null;
       isTutor = p.isTutor ?? false;
     });
   }
@@ -108,7 +85,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               _buildProfileField('Name', nameController),
               _buildProfileField('Age', ageController,
                   keyboardType: TextInputType.number),
-              _buildDropdownField('Major', majors, selectedMajor, (newValue) {
+              _buildDropdownField('Major', majorsList, selectedMajor, (newValue) {
                 setState(() {
                   selectedMajor = newValue;
                   majorController.text = newValue ?? '';

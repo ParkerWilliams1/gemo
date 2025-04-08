@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/my_chats_screen.dart'; // Import MyChatsScreen
@@ -79,7 +80,11 @@ class MenuScreen extends StatelessWidget {
             _buildMenuButton(
               icon: Icons.logout,
               label: 'Logout',
-              onPressed: () {}, // Implement logout function here
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacementNamed(
+                    context, '/signin'); // Make sure your route is defined
+              },
             ),
           ],
         ),
