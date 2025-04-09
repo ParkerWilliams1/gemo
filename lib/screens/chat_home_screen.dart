@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/waiting_for_match_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
@@ -224,137 +225,153 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     });
   }
 
-@override
-Widget build(BuildContext context) {
-  if (_waitingForMatch) {
-    return WaitingForMatchScreen(
-      category: 'General',
-      onCancel: () {
-        setState(() => _waitingForMatch = false);
-      },
+  @override
+  Widget build(BuildContext context) {
+    if (_waitingForMatch) {
+      return WaitingForMatchScreen(
+        category: 'General',
+        onCancel: () {
+          setState(() => _waitingForMatch = false);
+        },
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.menu, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MenuScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/images/HomeScreen.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.only(top: 290),
+              child: Text(
+                'Lets Chat!',
+                style: TextStyle(
+                  color: Color(0xFF707070),
+                  fontSize: 62,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          // New Chat Button
+          Positioned(
+            left: 78,
+            top: 405,
+            child: GestureDetector(
+              onTap: startNewChatSafely,
+              child: Container(
+                width: 247,
+                height: 91,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF83B9FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'New Chat',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Video Chat Button
+          Positioned(
+            left: 78,
+            top: 510,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => JoinScreen()),
+                );
+              },
+              child: Container(
+                width: 247,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFA5D6A7), // Light green color
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Video Chat',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Browse Categories Button
+          Positioned(
+            left: 120,
+            top: 580, // Adjusted position below Video Chat button
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CategoriesScreen()),
+                );
+              },
+              child: Container(
+                width: 180,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Browse Categories',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
-  return Scaffold(
-    body: Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('lib/images/HomeScreen.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const Align(
-          alignment: Alignment.topCenter,
-          child: Padding(
-            padding: EdgeInsets.only(top: 290),
-            child: Text(
-              'Lets Chat!',
-              style: TextStyle(
-                color: Color(0xFF707070),
-                fontSize: 62,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-        // New Chat Button
-        Positioned(
-          left: 78,
-          top: 405,
-          child: GestureDetector(
-            onTap: startNewChatSafely,
-            child: Container(
-              width: 247,
-              height: 91,
-              decoration: BoxDecoration(
-                color: const Color(0xFF83B9FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  'New Chat',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 24,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Video Chat Button
-        Positioned(
-          left: 78,
-          top: 510,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => JoinScreen()),
-              );
-            },
-            child: Container(
-              width: 247,
-              height: 55,
-              decoration: BoxDecoration(
-                color: const Color(0xFFA5D6A7), // Light green color
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  'Video Chat',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Browse Categories Button
-        Positioned(
-          left: 120,
-          top: 580, // Adjusted position below Video Chat button
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => CategoriesScreen()),
-              );
-            },
-            child: Container(
-              width: 180,
-              height: 55,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  'Browse Categories',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/my_chats_screen.dart'; // Import MyChatsScreen
@@ -10,7 +11,9 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
         shadowColor: Colors.black,
@@ -30,7 +33,8 @@ class MenuScreen extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.23),
+        padding:
+            EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.23),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -42,7 +46,8 @@ class MenuScreen extends StatelessWidget {
                 print("Navigating to My Chats...");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const MyChatsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const MyChatsScreen()),
                 );
               },
             ),
@@ -55,15 +60,7 @@ class MenuScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(
-                      firstName: "Grace",
-                      lastName: "Bergquist",
-                      major: "Computer Science",
-                      subjects: "Math, Physics",
-                      username: "graceb",
-                      email: "grace@example.com",
-                      password: "password123",
-                    ),
+                    builder: (context) => const ProfileScreen(),
                   ),
                 );
               },
@@ -76,7 +73,8 @@ class MenuScreen extends StatelessWidget {
                 print("Navigating to Settings...");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsScreen()),
                 );
               },
             ),
@@ -84,7 +82,11 @@ class MenuScreen extends StatelessWidget {
             _buildMenuButton(
               icon: Icons.logout,
               label: 'Logout',
-              onPressed: () {}, // Implement logout function here
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacementNamed(
+                    context, '/signin'); // Make sure your route is defined
+              },
             ),
           ],
         ),
