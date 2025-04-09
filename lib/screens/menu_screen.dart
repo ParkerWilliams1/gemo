@@ -11,7 +11,9 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
         shadowColor: Colors.black,

@@ -23,24 +23,33 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     {"title": "EDM"},
   ];
 
-void _startMatching(String category) async {
-  setState(() => _isMatching = true);
-  await MatchmakingService().startCategoryChat(context, category);
-  if (mounted) setState(() => _isMatching = false);
-}
-
+  void _startMatching(String category) async {
+    setState(() => _isMatching = true);
+    await MatchmakingService().startCategoryChat(context, category);
+    if (mounted) setState(() => _isMatching = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
+          backgroundColor: Colors.white,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.black,
           title: Text(
             'Categories',
             style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios_new,
+                color: Colors.black, size: 24), // Custom arrow
+            onPressed: () {
+              Navigator.pop(context); // Navigate back to the previous screen
+            },
           ),
           actions: <Widget>[
             IconButton(
@@ -68,7 +77,8 @@ void _startMatching(String category) async {
                         width: MediaQuery.of(context).size.width * 0.9,
                         child: SearchBar(
                           hintText: 'Search for a specific category',
-                          textStyle: WidgetStateProperty.all(GoogleFonts.inter()),
+                          textStyle:
+                              WidgetStateProperty.all(GoogleFonts.inter()),
                           leading: const Icon(Icons.search),
                           elevation: WidgetStateProperty.all(0.0),
                         ),
@@ -153,7 +163,10 @@ void _startMatching(String category) async {
               children: const [
                 Text(
                   'Let’s find a match for you',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
                 ),
                 Icon(Icons.arrow_forward_ios, size: 14, color: Colors.black),
               ],

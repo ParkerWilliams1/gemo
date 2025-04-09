@@ -16,7 +16,6 @@ import 'package:gemo/providers/user_profile_provider.dart';
 import '../providers/user_profile_notifier.dart';
 import 'package:gemo/constants/majors.dart';
 
-
 class ProfileScreen extends ConsumerStatefulWidget {
   static const routeName = '/profile';
 
@@ -75,9 +74,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       data: (profile) => Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.white,
           title: const Text('Profile'),
           centerTitle: true,
         ),
+        backgroundColor: Colors.white,
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ListView(
@@ -85,7 +86,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               _buildProfileField('Name', nameController),
               _buildProfileField('Age', ageController,
                   keyboardType: TextInputType.number),
-              _buildDropdownField('Major', majorsList, selectedMajor, (newValue) {
+              _buildDropdownField('Major', majorsList, selectedMajor,
+                  (newValue) {
                 setState(() {
                   selectedMajor = newValue;
                   majorController.text = newValue ?? '';
