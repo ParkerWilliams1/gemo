@@ -27,7 +27,7 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
 
   /// Update a specific field or set of fields in Firestore and local state
   Future<void> updateProfile(
-      {String? name, int? age, String? major, bool? isTutor}) async {
+      {String? name, int? age, String? major, bool? isTutor, Map<String, dynamic>? tutorProfile}) async {
     final user = _auth.currentUser;
     if (user == null || state is! AsyncData) return;
 
