@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gemo/auth_service.dart';
+import 'package:gemo/screens/chat_home_screen.dart';
 import 'package:gemo/screens/home_screen.dart';
 import 'package:gemo/screens/sign_up_screen.dart';
 
@@ -30,7 +31,11 @@ class _SignInScreenState extends State<SignInScreen> {
             .showSnackBar(SnackBar(content: Text(error)));
       } else {
         // Navigate to HomeScreen upon successful login
-        Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => ChatHomeScreen()),
+          (route) => false,
+        ); // Remove all previous routes -> fixed bug where back button stayed on screen
       }
     }
   }
@@ -53,7 +58,7 @@ class _SignInScreenState extends State<SignInScreen> {
           // Welcome Back Text
           const Positioned(
             left: 87,
-            top: 140,
+            top: 220,
             child: Text(
               'Welcome Back!',
               style: TextStyle(

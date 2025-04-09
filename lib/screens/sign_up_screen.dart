@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gemo/auth_service.dart';
+import 'package:gemo/screens/setup_profile_screen.dart';
 import 'package:gemo/screens/sign_in_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -19,31 +21,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _emailError;
 
   void _signUp() async {
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
+  String email = _emailController.text.trim();
+  String password = _passwordController.text.trim();
 
-    // Email must end in .edu
-    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email)) {
-      setState(() {
-        _emailError = "Please enter a valid .edu email address";
-      });
-      return;
-    } else {
-      setState(() {
-        _emailError = null;
-      });
-    }
+  // Email must end in .edu
+  if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email)) {
+    setState(() {
+      _emailError = "Please enter a valid .edu email address";
+    });
+    return;
+  } else {
+    setState(() {
+      _emailError = null;
+    });
+  }
 
-    if (email.isNotEmpty && password.isNotEmpty) {
-      String? error = await _authService.signUp(email, password);
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Verification email sent! Check your inbox.")));
+  if (email.isNotEmpty && password.isNotEmpty) {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      await userCredential.user?.sendEmailVerification();
+
+      final uid = userCredential.user?.uid;
+      if (uid != null && context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProfileSetupScreen(uid: uid),
+          ),
+        );
       }
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message ?? "Error occurred")));
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
