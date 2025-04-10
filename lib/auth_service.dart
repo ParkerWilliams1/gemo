@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logging/logging.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -57,7 +58,7 @@ class AuthService {
           .doc(currentUser.uid)
           .delete()
           .catchError((e) {
-        print("ℹ️ No queue entry to delete on sign-out.");
+        Logger("ℹ️ No queue entry to delete on sign-out.");
       });
     }
 

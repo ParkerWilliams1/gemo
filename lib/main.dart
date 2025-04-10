@@ -8,13 +8,20 @@ import 'screens/sign_in_screen.dart';
 import 'firebase_options.dart';
 import 'screens/sign_up_screen.dart';
 import 'video_stream/join_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(ProviderScope(child: MyApp()));
+
+  // Enable Firestore offline persistence
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+  );
+
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -28,10 +35,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: SplashScreen.routeName,
-      // initialRoute: JoinScreen.routeName,
+      initialRoute: SignInScreen.routeName,
       routes: {
-        SplashScreen.routeName: (context) => const SplashScreen(),
         HomeScreen.routeName: (context) => const HomeScreen(),
         ChatHomeScreen.routeName: (context) => ChatHomeScreen(),
         SignInScreen.routeName: (context) => const SignInScreen(),

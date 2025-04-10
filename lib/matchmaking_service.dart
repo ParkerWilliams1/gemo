@@ -48,10 +48,12 @@ class MatchmakingService {
       await queueRef.delete();
       await _firestore.collection('chat_queue').doc(matchedUid).delete();
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => ChatScreen(chatId: newChatRef.id)),
-      );
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ChatScreen(chatId: newChatRef.id)),
+        );
+      }
     } else {
       // 😕 No match — add current user to the queue with category
       await queueRef.set({
@@ -60,23 +62,27 @@ class MatchmakingService {
         'category': category,
       });
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => WaitingForMatchScreen(
-            category: category,
-            onCancel: () async {
-              // Handle user cancellation
-              await queueRef.delete();
-              await userRef.update({
-                'currentChat': null,
-                'matchable': true,
-              });
-              Navigator.pop(context); // Return to CategoriesScreen
-            },
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => WaitingForMatchScreen(
+              category: category,
+              onCancel: () async {
+                // Handle user cancellation
+                await queueRef.delete();
+                await userRef.update({
+                  'currentChat': null,
+                  'matchable': true,
+                });
+                if (context.mounted) {
+                  Navigator.pop(context); // Return to CategoriesScreen
+                }
+              },
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 }

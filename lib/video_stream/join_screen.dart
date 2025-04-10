@@ -54,12 +54,12 @@ class JoinScreen extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('lib/images/HomeScreen.png'),
+                image: AssetImage('assets/HomeScreen.png'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          
+
           // Main content column
           Center(
             child: Column(
@@ -75,9 +75,9 @@ class JoinScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                
+
                 SizedBox(height: 40),
-                
+
                 // Create Meeting Button (matches New Chat button style)
                 Container(
                   width: 247,
@@ -99,9 +99,9 @@ class JoinScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 SizedBox(height: 30),
-                
+
                 // Meeting ID Input Field (styled to match)
                 Container(
                   width: 247,
@@ -128,21 +128,48 @@ class JoinScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 SizedBox(height: 30),
-                
+
                 // Join Meeting Button (matches Video Chat button style)
                 Container(
                   width: 247,
                   height: 55,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFA5D6A7), // Same green as Video Chat button
+                    color: const Color(
+                        0xFFA5D6A7), // Same green as Video Chat button
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextButton(
                     onPressed: () => onJoinButtonPressed(context),
                     child: const Text(
                       'Join Meeting',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 30),
+
+                // Return to Chat Home Button
+                Container(
+                  width: 247,
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(context); 
+                    },
+                    child: const Text(
+                      'Back to Chat Home',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 18,

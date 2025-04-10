@@ -11,10 +11,10 @@ class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
   @override
-  _SignInScreenState createState() => _SignInScreenState();
+  SignInScreenState createState() => SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -29,7 +29,7 @@ class _SignInScreenState extends State<SignInScreen> {
       if (error != null && mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(error)));
-      } else {
+      } else if (mounted) {
         // Navigate to HomeScreen upon successful login
         Navigator.pushAndRemoveUntil(
           context,
@@ -50,7 +50,7 @@ class _SignInScreenState extends State<SignInScreen> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('lib/images/background.png'),
+                image: AssetImage('assets/background.png'),
                 fit: BoxFit.cover,
               ),
             ),
