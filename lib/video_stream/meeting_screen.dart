@@ -8,8 +8,11 @@ class MeetingScreen extends StatefulWidget {
   final String meetingId;
   final String token;
 
-  const MeetingScreen(
-      {super.key, required this.meetingId, required this.token});
+  const MeetingScreen({
+    super.key,
+    required this.meetingId,
+    required this.token,
+  });
 
   @override
   State<MeetingScreen> createState() => _MeetingScreenState();
@@ -24,26 +27,21 @@ class _MeetingScreenState extends State<MeetingScreen> {
 
   @override
   void initState() {
-    // create room
+    super.initState();
+
+    // Create room
     _room = VideoSDK.createRoom(
       roomId: widget.meetingId,
       token: widget.token,
-      // TODO: Put in place a function that will pull displayName from their Firebase
       displayName: "John Doe",
       micEnabled: micEnabled,
       camEnabled: camEnabled,
-      // multiStream is disabled to fix camera issue
-      multiStream: false,
-      // Set default camera to 0 when on laptop/pc (webcam) & 1 when on mobile (front-facing)
-      defaultCameraIndex: kIsWeb ? 0 : 1 
+      multiStream: false, // Ensure single stream mode
+      defaultCameraIndex: kIsWeb ? 0 : 1,
     );
 
     setMeetingEventListener();
-
-    // Join room
     _room.join();
-
-    super.initState();
   }
 
   @override
@@ -53,81 +51,84 @@ class _MeetingScreenState extends State<MeetingScreen> {
     }
   }
 
-void setMeetingEventListener() {
-  _room.on(Events.roomJoined, () {
-    setState(() {
-      participants.putIfAbsent(
-          _room.localParticipant.id, () => _room.localParticipant);
+  void setMeetingEventListener() {
+    _room.on(Events.roomJoined, () {
+      setState(() {
+        participants[_room.localParticipant.id] = _room.localParticipant;
+      });
     });
-  });
 
-  _room.on(
-    Events.participantJoined,
-    (Participant participant) {
-      setState(
-        () => participants.putIfAbsent(participant.id, () => participant),
-      );
-    },
-  );
+    _room.on(Events.participantJoined, (Participant participant) {
+      setState(() {
+        participants[participant.id] = participant;
+      });
+    });
 
-  _room.on(Events.participantLeft, (String participantId) {
-    if (participants.containsKey(participantId)) {
-      setState(() => participants.remove(participantId));
-    }
-  });
+    _room.on(Events.participantLeft, (String participantId) {
+      if (participants.containsKey(participantId)) {
+        setState(() {
+          participants.remove(participantId);
+        });
+      }
+    });
 
-  _room.on(Events.roomLeft, () {
-    if (mounted) {
-      participants.clear();
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/home', // Your HomeScreen route
-        (Route<dynamic> route) => false,
-      );
-    }
-  });
-}
+    _room.on(Events.roomLeft, () {
+      if (mounted) {
+        participants.clear();
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/home',
+          (Route<dynamic> route) => false,
+        );
+      }
+    });
+  }
 
-  // onbackButton pressed leave the room
+  // Handle leaving the room when back button is pressed
   Future<bool> _onWillPop() async {
     _room.leave();
-    _room.end();
     return true;
   }
 
   @override
   Widget build(BuildContext context) {
+    // Get the local participant
+    final localParticipant = _room.localParticipant;
+    
+    // Get the first remote participant (if available)
+    final remoteParticipants = participants.values.where((p) => p.id != localParticipant.id).toList();
+    final Participant? remoteParticipant = remoteParticipants.isNotEmpty ? remoteParticipants.first : null;
+
     return WillPopScope(
-      onWillPop: () => _onWillPop(),
+      onWillPop: _onWillPop,
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Stack(
             children: [
-              // Main view for the remote user
-              if (participants.isNotEmpty)
+              // Show remote participant in fullscreen if available
+              if (remoteParticipant != null)
                 Positioned.fill(
                   child: ParticipantTile(
-                    key: Key(participants.values.first.id),
-                    participant: participants.values.first,
+                    key: Key(remoteParticipant.id),
+                    participant: remoteParticipant,
                     isMainView: true,
                   ),
                 ),
 
-              // Local user's camera in a smaller box at the top-right corner
-              if (participants.length > 1)
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: SizedBox(
-                    width: 120,
-                    height: 160,
-                    child: ParticipantTile(
-                      key: Key(participants.values.elementAt(1).id),
-                      participant: participants.values.elementAt(1),
-                      isMainView: false,
-                    ),
+              // Local user’s camera preview in the top-right corner
+              Positioned(
+                top: 16,
+                right: 16,
+                child: SizedBox(
+                  width: 120,
+                  height: 160,
+                  child: ParticipantTile(
+                    key: Key(localParticipant.id),
+                    participant: localParticipant,
+                    isMainView: false,
                   ),
                 ),
+              ),
 
               // Meeting controls at the bottom
               Positioned(
@@ -136,12 +137,16 @@ void setMeetingEventListener() {
                 right: 0,
                 child: MeetingControls(
                   onToggleMicButtonPressed: () {
-                    micEnabled ? _room.muteMic() : _room.unmuteMic();
-                    micEnabled = !micEnabled;
+                    setState(() {
+                      micEnabled ? _room.muteMic() : _room.unmuteMic();
+                      micEnabled = !micEnabled;
+                    });
                   },
                   onToggleCameraButtonPressed: () {
-                    camEnabled ? _room.disableCam() : _room.enableCam();
-                    camEnabled = !camEnabled;
+                    setState(() {
+                      camEnabled ? _room.disableCam() : _room.enableCam();
+                      camEnabled = !camEnabled;
+                    });
                   },
                   onLeaveButtonPressed: () {
                     _room.leave();

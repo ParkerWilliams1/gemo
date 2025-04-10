@@ -59,9 +59,15 @@ class _ParticipantTileState extends State<ParticipantTile> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.isMainView ? 0 : 8),
         color: Colors.grey.shade800,
-        border: widget.isMainView
+        boxShadow: widget.isMainView
             ? null
-            : Border.all(color: Colors.white, width: 2),
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3), // Soft shadow
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                ),
+              ],
       ),
       child: videoStream != null
           ? RTCVideoView(
@@ -71,8 +77,7 @@ class _ParticipantTileState extends State<ParticipantTile> {
           : Center(
               child: Icon(
                 Icons.person,
-                // Size of Small User Camera Icon
-                size: widget.isMainView ? 100 : 50,
+                size: widget.isMainView ? 100 : 50, // Size of Small User Camera Icon
                 color: Colors.white,
               ),
             ),
