@@ -5,6 +5,24 @@ import 'package:gemo/matchmaking_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 
+class Category {
+  String name;
+  int clicks;
+
+  Category(this.name, this.clicks);
+}
+
+Future<List<Category>> fetchCategories() async {
+  QuerySnapshot snapshot =
+      await FirebaseFirestore.instance.collection('categories').get();
+
+  List<Category> categories = snapshot.docs.map((doc) {
+    return Category(doc['displayName'], doc['clicks']);
+  }).toList();
+
+  return categories;
+}
+
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
 
@@ -15,66 +33,87 @@ class CategoriesScreen extends StatefulWidget {
 class CategoriesScreenState extends State<CategoriesScreen> {
   bool _isMatching = false;
 
-  final Map<String, Color> interests = {
-    "Music": Colors.blue,
-    "Gaming": Colors.green,
-    "Movies": Colors.red,
-    "Sports": Colors.orange,
-    "Travel": Colors.purple,
-    "Fitness": Colors.yellow,
-    "Fashion": Colors.teal,
-    "Food": Colors.pink,
-    "Photography": Colors.cyan,
-    "Health": Colors.indigo,
-    "Business": Colors.lime,
-    "Finance": Colors.amber,
-  };
+  // Combine interests and majors into a single categories map with a "group" field
+  List<Map<String, dynamic>> categories = [
+    // Interest
+    {"displayName": "Music", "color": "0xFF0000FF", "group": "interest", "clicks": 0, "isActive": true}, // Blue
+    {"displayName": "Gaming", "color": "0xFF008000", "group": "interest", "clicks": 0, "isActive": true}, // Green
+    {"displayName": "Movies", "color": "0xFFFF0000", "group": "interest", "clicks": 0, "isActive": true}, // Red
+    {"displayName": "Sports", "color": "0xFFFFA500", "group": "interest", "clicks": 0, "isActive": true}, // Orange
+    {"displayName": "Travel", "color": "0xFF800080", "group": "interest", "clicks": 0, "isActive": true}, // Purple
+    {"displayName": "Fitness", "color": "0xFFFFFF00", "group": "interest", "clicks": 0, "isActive": true}, // Yellow
+    {"displayName": "Fashion", "color": "0xFF008080", "group": "interest", "clicks": 0, "isActive": true}, // Teal
+    {"displayName": "Food", "color": "0xFFFFC0CB", "group": "interest", "clicks": 0, "isActive": true}, // Pink
+    {"displayName": "Photography", "color": "0xFF00FFFF", "group": "interest", "clicks": 0, "isActive": true}, // Cyan
+    {"displayName": "Health", "color": "0xFF4B0082", "group": "interest", "clicks": 0, "isActive": true}, // Indigo
+    {"displayName": "Business", "color": "0xFF00FF00", "group": "interest", "clicks": 0, "isActive": true}, // Lime
+    {"displayName": "Finance", "color": "0xFFFFBF00", "group": "interest", "clicks": 0, "isActive": true}, // Amber
 
-  final Map<String, Color> majors = {
-    "Electrical Engineering": Colors.red,
-    "Calculus": Colors.amber,
-    "Physics": Colors.teal,
-    "Chemistry": Colors.pink,
-    "Economics": Colors.cyan,
-    "Psychology": Colors.indigo,
-    "History": Colors.lime,
-    "Computer Science": Colors.blue,
-    "Mechanical Engineering": Colors.green,
-    "Civil Engineering": Colors.orange,
-    "Chemical Engineering": Colors.purple,
-    "Bio Engineering": Colors.yellow,
-  };
+    // Major
+    {"displayName": "Electrical Engineering", "color": "0xFFFF0000", "group": "major", "clicks": 0, "isActive": true}, // Red
+    {"displayName": "Calculus", "color": "0xFFFFBF00", "group": "major", "clicks": 0, "isActive": true}, // Amber
+    {"displayName": "Physics", "color": "0xFF008080", "group": "major", "clicks": 0, "isActive": true}, // Teal
+    {"displayName": "Chemistry", "color": "0xFFFFC0CB", "group": "major", "clicks": 0, "isActive": true}, // Pink
+    {"displayName": "Economics", "color": "0xFF00FFFF", "group": "major", "clicks": 0, "isActive": true}, // Cyan
+    {"displayName": "Psychology", "color": "0xFF4B0082", "group": "major", "clicks": 0, "isActive": true}, // Indigo
+    {"displayName": "History", "color": "0xFF00FF00", "group": "major", "clicks": 0, "isActive": true}, // Lime
+    {"displayName": "Computer Science", "color": "0xFF0000FF", "group": "major", "clicks": 0, "isActive": true}, // Blue
+    {"displayName": "Mechanical Engineering", "color": "0xFF008000", "group": "major", "clicks": 0, "isActive": true}, // Green
+    {"displayName": "Civil Engineering", "color": "0xFFFFA500", "group": "major", "clicks": 0, "isActive": true}, // Orange
+    {"displayName": "Chemical Engineering", "color": "0xFF800080", "group": "major", "clicks": 0, "isActive": true}, // Purple
+    {"displayName": "Bio Engineering", "color": "0xFFFFFF00", "group": "major", "clicks": 0, "isActive": true}, // Yellow
+  ];
 
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    updateCategoryClicks(); // Fetch and update clicks
+  }
+  
+  Future<void> updateCategoryClicks() async {
+    try {
+      // Fetch categories with clicks from Firestore using heap_search.dart
+      List<Category> fetchedCategories = await fetchCategories();
+
+      // Update the clicks in the local categories map
+      setState(() {
+        for (var fetchedCategory in fetchedCategories) {
+          final index = categories
+              .indexWhere((cat) => cat["title"] == fetchedCategory.name);
+          if (index != -1) {
+            categories[index]["clicks"] = fetchedCategory.clicks;
+          }
+        }
+      });
+    } catch (e) {
+      Logger("Error updating category clicks: $e");
+    }
+  }
 
   Future<List<Map<String, dynamic>>> get trendingCategories async {
     try {
-      // Fetch the top 3 most clicked categories from Firestore
-      final querySnapshot = await _firestore
+      // Sort categories by clicks in descending order
+      List<Map<String, dynamic>> sortedCategories = List.from(categories);
+      sortedCategories.sort((a, b) => b["clicks"].compareTo(a["clicks"]));
 
-/////////////////////////////////////////////////////////////////////////////////////
-          .collection('categories') // Replace with your Firestore collection name
-////////////////////////////////////////////////////////////////////////////////////
-
-          .orderBy('clicks', descending: true)
-          .limit(3)
-          .get();
-
-      final List<Map<String, dynamic>> trendingData = querySnapshot.docs.map((doc) {
+      // Take the top 3 categories and create a copy to avoid modifying the original list
+      final trendingData = sortedCategories.take(3).map((category) {
         return {
-          "title": doc['title'],
-          "clicks": doc['clicks'],
+          ...category, // Create a copy of the category
+          "color": category["color"], // Retain the original color
         };
       }).toList();
 
-      // Assign colors based on rank
+      // Assign gold, silver, and bronze colors based on rank
       for (int i = 0; i < trendingData.length; i++) {
         if (i == 0) {
-          trendingData[i]["color"] = const Color(0xFFFFD700); // Gold
+          trendingData[i]["color"] = "0xFFFFD700"; // 0xFFFFD700 Gold
         } else if (i == 1) {
-          trendingData[i]["color"] = const Color(0xFFC0C0C0); // Silver
+          trendingData[i]["color"] = "0xFFC0C0C0"; // 0xFFC0C0C0 Silver
         } else if (i == 2) {
-          trendingData[i]["color"] = const Color(0xFFCD7F32); // Bronze
+          trendingData[i]["color"] = "0xFFCD7F32"; // 0xFFCD7F32 Bronze
         }
       }
 
@@ -85,22 +124,51 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     }
   }
 
-  void _startMatching(String category) async {
-    setState(() => _isMatching = true);
-    await MatchmakingService().startCategoryChat(context, category);
-    if (mounted) setState(() => _isMatching = false);
+void startMatching(String category) async {
+  setState(() => _isMatching = true);
+  // Increment the clicks in Firestore
+  try {
+    final categoryDoc = await FirebaseFirestore.instance
+        .collection('categories')
+        .where('displayName', isEqualTo: category)
+        .limit(1)
+        .get();
+
+    if (categoryDoc.docs.isNotEmpty) {
+      final docId = categoryDoc.docs.first.id;
+      // Increment the clicks field in Firestore
+      await FirebaseFirestore.instance
+          .collection('categories')
+          .doc(docId)
+          .update({"clicks": FieldValue.increment(1)});
+
+      // Update the local categories list
+      setState(() {
+        final index =
+            categories.indexWhere((cat) => cat["displayName"] == category);
+        if (index != -1) {
+          categories[index]["clicks"] += 1; // Increment the local clicks count
+        }
+      });
+    }
+  } catch (e) {
+    Logger("Error updating category clicks: $e");
   }
 
-    List<Map<String, dynamic>> get interestsList => interests.entries
-      .map((entry) => {"title": entry.key, "color": entry.value})
-      .toList();
-
-  List<Map<String, dynamic>> get majorsList => majors.entries
-      .map((entry) => {"title": entry.key, "color": entry.value})
-      .toList();
+ if (mounted) {
+    await MatchmakingService().startCategoryChat(context, category);
+    setState(() => _isMatching = false);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
+    // Filter categories by group
+    final interestCategories =
+        categories.where((cat) => cat["group"] == "interest").toList();
+    final majorCategories =
+        categories.where((cat) => cat["group"] == "major").toList();
+
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
@@ -130,8 +198,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                    'assets/HomeScreen.png'),
+                image: AssetImage('assets/HomeScreen.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -169,33 +236,30 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                     ),
                   );
                 } else {
-                  return Column(
-                    children: [
-                      _buildCategorySection(
-                        context,
-                        "Trending Categories",
-                        snapshot.data!,
-                      ),
-                      _buildCategorySection(context, "Majors", majorsList),
-                      _buildCategorySection(
-                          context, "All Interests", interestsList),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 10),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            "Looking for a tutor?",
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Trending Categories Section
+                        buildCategorySection(
+                          context,
+                          "Trending Categories",
+                          snapshot.data!,
                         ),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildTutorMatchBox(),
-                    ],
+                        // Interest Categories Section
+                        buildCategorySection(
+                          context,
+                          "Interests",
+                          interestCategories,
+                        ),
+                        // Major Categories Section
+                        buildCategorySection(
+                          context,
+                          "Majors",
+                          majorCategories,
+                        ),
+                      ],
+                    ),
                   );
                 }
               },
@@ -205,7 +269,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  Widget _buildCategorySection(
+  Widget buildCategorySection(
       BuildContext context, String title, List<Map<String, dynamic>> items) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
@@ -230,10 +294,10 @@ class CategoriesScreenState extends State<CategoriesScreen> {
               itemBuilder: (context, index) {
                 final item = items[index];
                 return GestureDetector(
-                  onTap: () => _startMatching(item["title"]),
+                  onTap: () => startMatching(item["displayName"]),
                   child: CategoryTile(
-                    title: item["title"],
-                    color: item["color"], // Use the color from the list
+                    title: item["displayName"],
+                    color: item["color"], // Pass the hex string
                   ),
                 );
               },
@@ -244,7 +308,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  Widget _buildTutorMatchBox() {
+  Widget buildTutorMatchBox() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -279,8 +343,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
 
 class CategoryTile extends StatelessWidget {
   final String title;
-  final Color color; // Add a color parameter
-
+  final String color; // Changed to String to accept hex strings
   const CategoryTile({super.key, required this.title, required this.color});
 
   @override
@@ -292,7 +355,9 @@ class CategoryTile extends StatelessWidget {
         child: Container(
           width: 110,
           decoration: BoxDecoration(
-            color: color, // Use the passed color
+            color: color.isNotEmpty
+                ? Color(int.tryParse(color) ?? 0xFFFFFFFF) // Default to white if parsing fails
+                : const Color(0xFFFFFFFF), // Default to white if color is empty
             borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
