@@ -36,31 +36,31 @@ class CategoriesScreenState extends State<CategoriesScreen> {
   // Combine interests and majors into a single categories map with a "group" field
   List<Map<String, dynamic>> categories = [
     // Interest
-    {"displayName": "Music", "color": "0xFF0000FF", "group": "interest", "clicks": 0, "isActive": true}, // Blue
+    {"displayName": "Music", "color": "0xFF0080FF", "group": "interest", "clicks": 0, "isActive": true}, // Blue
     {"displayName": "Gaming", "color": "0xFF008000", "group": "interest", "clicks": 0, "isActive": true}, // Green
-    {"displayName": "Movies", "color": "0xFFFF0000", "group": "interest", "clicks": 0, "isActive": true}, // Red
+    {"displayName": "Movies", "color": "0xFFff5733", "group": "interest", "clicks": 0, "isActive": true}, // Red
     {"displayName": "Sports", "color": "0xFFFFA500", "group": "interest", "clicks": 0, "isActive": true}, // Orange
-    {"displayName": "Travel", "color": "0xFF800080", "group": "interest", "clicks": 0, "isActive": true}, // Purple
+    {"displayName": "Travel", "color": "0xFFAC33FF", "group": "interest", "clicks": 0, "isActive": true}, // Purple
     {"displayName": "Fitness", "color": "0xFFFFFF00", "group": "interest", "clicks": 0, "isActive": true}, // Yellow
-    {"displayName": "Fashion", "color": "0xFF008080", "group": "interest", "clicks": 0, "isActive": true}, // Teal
+    {"displayName": "Fashion", "color": "0xFFFE7AE2", "group": "interest", "clicks": 0, "isActive": true}, // Teal
     {"displayName": "Food", "color": "0xFFFFC0CB", "group": "interest", "clicks": 0, "isActive": true}, // Pink
     {"displayName": "Photography", "color": "0xFF00FFFF", "group": "interest", "clicks": 0, "isActive": true}, // Cyan
-    {"displayName": "Health", "color": "0xFF4B0082", "group": "interest", "clicks": 0, "isActive": true}, // Indigo
+    {"displayName": "Health", "color": "0xFFFE5EE6", "group": "interest", "clicks": 0, "isActive": true}, // Indigo
     {"displayName": "Business", "color": "0xFF00FF00", "group": "interest", "clicks": 0, "isActive": true}, // Lime
     {"displayName": "Finance", "color": "0xFFFFBF00", "group": "interest", "clicks": 0, "isActive": true}, // Amber
 
     // Major
-    {"displayName": "Electrical Engineering", "color": "0xFFFF0000", "group": "major", "clicks": 0, "isActive": true}, // Red
+    {"displayName": "Electrical Engineering", "color": "0xFFFF5454", "group": "major", "clicks": 0, "isActive": true}, // Red
     {"displayName": "Calculus", "color": "0xFFFFBF00", "group": "major", "clicks": 0, "isActive": true}, // Amber
     {"displayName": "Physics", "color": "0xFF008080", "group": "major", "clicks": 0, "isActive": true}, // Teal
     {"displayName": "Chemistry", "color": "0xFFFFC0CB", "group": "major", "clicks": 0, "isActive": true}, // Pink
     {"displayName": "Economics", "color": "0xFF00FFFF", "group": "major", "clicks": 0, "isActive": true}, // Cyan
-    {"displayName": "Psychology", "color": "0xFF4B0082", "group": "major", "clicks": 0, "isActive": true}, // Indigo
-    {"displayName": "History", "color": "0xFF00FF00", "group": "major", "clicks": 0, "isActive": true}, // Lime
-    {"displayName": "Computer Science", "color": "0xFF0000FF", "group": "major", "clicks": 0, "isActive": true}, // Blue
+    {"displayName": "Psychology", "color": "0xFFA254FF", "group": "major", "clicks": 0, "isActive": true}, // Indigo
+    {"displayName": "History", "color": "0xFFE7BB92", "group": "major", "clicks": 0, "isActive": true}, // Lime
+    {"displayName": "Computer Science", "color": "0xFF0080FF", "group": "major", "clicks": 0, "isActive": true}, // Blue
     {"displayName": "Mechanical Engineering", "color": "0xFF008000", "group": "major", "clicks": 0, "isActive": true}, // Green
     {"displayName": "Civil Engineering", "color": "0xFFFFA500", "group": "major", "clicks": 0, "isActive": true}, // Orange
-    {"displayName": "Chemical Engineering", "color": "0xFF800080", "group": "major", "clicks": 0, "isActive": true}, // Purple
+    {"displayName": "Chemical Engineering", "color": "0xFF00FF00", "group": "major", "clicks": 0, "isActive": true}, // Purple
     {"displayName": "Bio Engineering", "color": "0xFFFFFF00", "group": "major", "clicks": 0, "isActive": true}, // Yellow
   ];
 
@@ -71,17 +71,16 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     super.initState();
     updateCategoryClicks(); // Fetch and update clicks
   }
-  
+
   Future<void> updateCategoryClicks() async {
     try {
-      // Fetch categories with clicks from Firestore using heap_search.dart
+      // Fetch categories with clicks from Firestore
       List<Category> fetchedCategories = await fetchCategories();
 
       // Update the clicks in the local categories map
       setState(() {
         for (var fetchedCategory in fetchedCategories) {
-          final index = categories
-              .indexWhere((cat) => cat["title"] == fetchedCategory.name);
+          final index = categories.indexWhere((cat) => cat["displayName"] == fetchedCategory.name);
           if (index != -1) {
             categories[index]["clicks"] = fetchedCategory.clicks;
           }
@@ -94,6 +93,8 @@ class CategoriesScreenState extends State<CategoriesScreen> {
 
   Future<List<Map<String, dynamic>>> get trendingCategories async {
     try {
+      await Future.delayed(const Duration(milliseconds: 70));
+
       // Sort categories by clicks in descending order
       List<Map<String, dynamic>> sortedCategories = List.from(categories);
       sortedCategories.sort((a, b) => b["clicks"].compareTo(a["clicks"]));
@@ -126,16 +127,18 @@ class CategoriesScreenState extends State<CategoriesScreen> {
 
 void startMatching(String category) async {
   setState(() => _isMatching = true);
-  // Increment the clicks in Firestore
+
   try {
+    // Find the category document in Firestore
     final categoryDoc = await FirebaseFirestore.instance
         .collection('categories')
-        .where('displayName', isEqualTo: category)
+        .where('displayName', isEqualTo: category) // Match by displayName
         .limit(1)
         .get();
 
     if (categoryDoc.docs.isNotEmpty) {
       final docId = categoryDoc.docs.first.id;
+
       // Increment the clicks field in Firestore
       await FirebaseFirestore.instance
           .collection('categories')
@@ -144,18 +147,17 @@ void startMatching(String category) async {
 
       // Update the local categories list
       setState(() {
-        final index =
-            categories.indexWhere((cat) => cat["displayName"] == category);
+        final index = categories.indexWhere((cat) => cat["displayName"] == category);
         if (index != -1) {
           categories[index]["clicks"] += 1; // Increment the local clicks count
         }
       });
     }
   } catch (e) {
-    Logger("Error updating category clicks: $e");
+    Logger("Error updating category clicks in Firestore: $e");
   }
 
- if (mounted) {
+  if (mounted) {
     await MatchmakingService().startCategoryChat(context, category);
     setState(() => _isMatching = false);
   }
@@ -240,10 +242,11 @@ void startMatching(String category) async {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 40), // Add spacing above "Trending Categories"
                         // Trending Categories Section
                         buildCategorySection(
                           context,
-                          "Trending Categories",
+                          "Trending",
                           snapshot.data!,
                         ),
                         // Interest Categories Section
@@ -258,6 +261,22 @@ void startMatching(String category) async {
                           "Majors",
                           majorCategories,
                         ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 70, top: 80),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Looking for a tutor?",
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        buildTutorMatchBox(),
                       ],
                     ),
                   );
@@ -269,22 +288,40 @@ void startMatching(String category) async {
     );
   }
 
-  Widget buildCategorySection(
-      BuildContext context, String title, List<Map<String, dynamic>> items) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+Widget buildCategorySection(
+  BuildContext context, String title, List<Map<String, dynamic>> items) {
+  final isTrending = title == "Trending";
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.inter(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 15),
+        ),
+        const SizedBox(height: 15),
+        if (isTrending)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const SizedBox(width: 15), // Add horizontal offset for trending boxes
+              ...items.map((item) {
+                return GestureDetector(
+                  onTap: () => startMatching(item["displayName"]),
+                  child: CategoryTile(
+                    title: item["displayName"],
+                    color: item["color"], // Pass the hex string
+                  ),
+                );
+              }),
+            ],
+          )
+        else
           SizedBox(
             height: 90,
             width: MediaQuery.of(context).size.width * 0.9,
@@ -303,10 +340,10 @@ void startMatching(String category) async {
               },
             ),
           ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget buildTutorMatchBox() {
     return Row(
@@ -354,10 +391,11 @@ class CategoryTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           width: 110,
+          height: 90,
           decoration: BoxDecoration(
             color: color.isNotEmpty
-                ? Color(int.tryParse(color) ?? 0xFFFFFFFF) // Default to white if parsing fails
-                : const Color(0xFFFFFFFF), // Default to white if color is empty
+                ? Color(int.tryParse(color) ?? 0xFFFFFFFF)
+                : const Color(0xFFFFFFFF), 
             borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
