@@ -10,6 +10,8 @@ class UserProfile {
   final String? major;
   final bool? isTutor;
 
+  var tutorProfile;
+
   UserProfile({
     required this.uid,
     required this.name,
