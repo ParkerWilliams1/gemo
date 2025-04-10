@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_home_screen.dart';
 import 'screens/sign_in_screen.dart';
-import 'firebase_options.dart';
 import 'screens/sign_up_screen.dart';
 import 'video_stream/join_screen.dart';
 
@@ -14,7 +16,13 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(ProviderScope(child: MyApp()));
+
+  // Enable Firestore offline persistence
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+  );
+
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -29,7 +37,6 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: SplashScreen.routeName,
-      // initialRoute: JoinScreen.routeName,
       routes: {
         SplashScreen.routeName: (context) => const SplashScreen(),
         HomeScreen.routeName: (context) => const HomeScreen(),
