@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:gemo/auth_service.dart';
+import 'package:gemo/screens/setup_profile_screen.dart';
 import 'package:gemo/screens/sign_in_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -15,7 +16,6 @@ class SignUpScreen extends StatefulWidget {
 class SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
   String? _emailError;
 
   void _signUp() async {
@@ -24,33 +24,36 @@ class SignUpScreenState extends State<SignUpScreen> {
 
     // Email must end in .edu
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email)) {
-      if (mounted) {
-        setState(() {
-          _emailError = "Please enter a valid .edu email address";
-        });
-      }
+      setState(() {
+        _emailError = "Please enter a valid .edu email address";
+      });
       return;
     } else {
-      if (mounted) {
-        setState(() {
-          _emailError = null;
-        });
-      }
+      setState(() {
+        _emailError = null;
+      });
     }
 
     if (email.isNotEmpty && password.isNotEmpty) {
-      String? error = await _authService.signUp(email, password);
-      if (mounted) {
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text("Verification email sent! Check your inbox.")),
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password);
+
+        await userCredential.user?.sendEmailVerification();
+
+        final uid = userCredential.user?.uid;
+        if (uid != null && context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileSetupScreen(uid: uid),
+            ),
           );
         }
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "An error occurred")),
+        );
       }
     }
   }
@@ -63,7 +66,7 @@ class SignUpScreenState extends State<SignUpScreen> {
         children: [
           // Background Image
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/background.png'),
                 fit: BoxFit.cover,
@@ -78,7 +81,7 @@ class SignUpScreenState extends State<SignUpScreen> {
               width: 114,
               height: 114,
               decoration: BoxDecoration(
-                image: DecorationImage(
+                image: const DecorationImage(
                   image: AssetImage('lib/images/gemo.png'),
                   fit: BoxFit.fill,
                 ),
@@ -133,7 +136,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                   height: 43,
                   decoration: ShapeDecoration(
                     shape: RoundedRectangleBorder(
-                      side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                      side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
@@ -142,9 +145,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       contentPadding:
-                          EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      errorText:
-                          _emailError, // Show error message if email is invalid
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      errorText: _emailError,
                     ),
                   ),
                 ),
@@ -174,7 +176,7 @@ class SignUpScreenState extends State<SignUpScreen> {
               height: 43,
               decoration: ShapeDecoration(
                 shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                  side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -189,7 +191,7 @@ class SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // Sign Up Button Container
+          // Sign Up Button
           Positioned(
             left: 78,
             top: 528,
@@ -218,7 +220,7 @@ class SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // "Already have an account?" Text
+          // Already have an account? Text
           Positioned(
             left: 108,
             top: 596,
@@ -234,9 +236,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const TextSpan(
-                    text: ' ',
-                  ),
+                  const TextSpan(text: ' '),
                   TextSpan(
                     text: 'Log in',
                     style: const TextStyle(

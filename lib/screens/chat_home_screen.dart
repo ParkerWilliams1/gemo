@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
 import 'package:gemo/screens/waiting_for_match_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
@@ -48,7 +49,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
       Logger("ℹ️ No existing queue entry for cleanup.");
     });
 
-    // ✅ Remove user from the queue on app startup to avoid stale entries
     await _firestore.runTransaction((transaction) async {
       DocumentSnapshot queueSnapshot = await transaction.get(queueRef);
       if (queueSnapshot.exists && queueSnapshot['uid'] == currentUser.uid) {
@@ -57,7 +57,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
       }
     });
 
-    // ✅ Reset chat state for proper matching
     await currentUserRef.update({
       "currentChat": null,
       "matchable": true,
@@ -71,12 +70,10 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
     DocumentReference user2Ref = _firestore.collection('users').doc(user2Uid);
     DocumentSnapshot user2Doc = await user2Ref.get();
 
-    // ✅ Ensure user2 is still active and matchable before proceeding
     if (!user2Doc.exists ||
         user2Doc['matchable'] == false ||
         user2Doc['currentChat'] != null) {
-      Logger(
-          "🚨 User $user2Uid is no longer available for matching. Removing from queue...");
+      Logger("🚨 User $user2Uid is no longer available for matching. Removing from queue...");
       await queueRef.delete();
       return;
     }
@@ -90,11 +87,9 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
 
     Logger("✅ New chat created: ${newChatRef.id}");
 
-    // Update both users' chat references
     await user1Ref.update({"currentChat": newChatRef.id, "matchable": false});
     await user2Ref.update({"currentChat": newChatRef.id, "matchable": false});
 
-    // Remove from queue
     await queueRef.delete();
   }
 
@@ -113,7 +108,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
     final userRef = _firestore.collection('users').doc(currentUid);
     final queueRef = _firestore.collection('chat_queue').doc(currentUid);
 
-    // Step 1: Clean up any stale queue entry for the current user
     try {
       await queueRef.delete();
       Logger("🧹 Cleared old queue entry for $currentUid.");
@@ -121,7 +115,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
       Logger("ℹ️ No previous queue entry to delete for $currentUid.");
     }
 
-    // Step 2: Search for another user in the queue (excluding current user)
     try {
       final snapshot = await _firestore
           .collection('chat_queue')
@@ -148,7 +141,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
         final matchedQueueRef =
             _firestore.collection('chat_queue').doc(matchedUid);
 
-        // Step 3: Create a new chat
         final newChatRef = _firestore.collection('chats').doc();
         await newChatRef.set({
           'participants': [currentUid, matchedUid],
@@ -156,29 +148,23 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
           'chatStatus': 'active',
         });
 
-        // Step 4: Update both users' chat references
-        await userRef
-            .update({'currentChat': newChatRef.id, 'matchable': false});
-        await matchedUserRef
-            .update({'currentChat': newChatRef.id, 'matchable': false});
+        await userRef.update({'currentChat': newChatRef.id, 'matchable': false});
+        await matchedUserRef.update({'currentChat': newChatRef.id, 'matchable': false});
 
-        // Step 5: Clean up queue entries
         await queueRef.delete();
         await matchedQueueRef.delete();
 
-        Logger(
-            "✅ Chat created between $currentUid and $matchedUid. Chat ID: ${newChatRef.id}");
+        Logger("✅ Chat created between $currentUid and $matchedUid. Chat ID: ${newChatRef.id}");
 
         _listenForChatUpdates();
       } else {
-        // No match found — add current user to queue
         Logger("📥 No match found. Adding $currentUid to queue...");
 
         try {
           await queueRef.set({
             'uid': currentUid,
             'timestamp': FieldValue.serverTimestamp(),
-            'category': 'General', // ✅ Add category field
+            'category': 'General',
           });
           Logger("✅ Successfully added $currentUid to chat_queue.");
         } catch (e) {
@@ -209,7 +195,7 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
         .doc(currentUser.uid)
         .snapshots()
         .listen((doc) {
-      if (!mounted) return; // ✅ Check if widget is still in tree
+      if (!mounted) return;
 
       if (doc.exists) {
         String? chatId = doc.data()?['currentChat'];
@@ -225,137 +211,150 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
     });
   }
 
-@override
-Widget build(BuildContext context) {
-  if (_waitingForMatch) {
-    return WaitingForMatchScreen(
-      category: 'General',
-      onCancel: () {
-        setState(() => _waitingForMatch = false);
-      },
+  @override
+  Widget build(BuildContext context) {
+    if (_waitingForMatch) {
+      return WaitingForMatchScreen(
+        category: 'General',
+        onCancel: () {
+          setState(() => _waitingForMatch = false);
+        },
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.menu, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MenuScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/images/HomeScreen.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.only(top: 290),
+              child: Text(
+                'Lets Chat!',
+                style: TextStyle(
+                  color: Color(0xFF707070),
+                  fontSize: 62,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 78,
+            top: 405,
+            child: GestureDetector(
+              onTap: startNewChatSafely,
+              child: Container(
+                width: 247,
+                height: 91,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF83B9FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'New Chat',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 78,
+            top: 510,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => JoinScreen()),
+                );
+              },
+              child: Container(
+                width: 247,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFA5D6A7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Video Chat',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 120,
+            top: 580,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CategoriesScreen()),
+                );
+              },
+              child: Container(
+                width: 180,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Browse Categories',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
-  return Scaffold(
-    body: Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/HomeScreen.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const Align(
-          alignment: Alignment.topCenter,
-          child: Padding(
-            padding: EdgeInsets.only(top: 290),
-            child: Text(
-              'Lets Chat!',
-              style: TextStyle(
-                color: Color(0xFF707070),
-                fontSize: 62,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-        // New Chat Button
-        Positioned(
-          left: 78,
-          top: 405,
-          child: GestureDetector(
-            onTap: startNewChatSafely,
-            child: Container(
-              width: 247,
-              height: 91,
-              decoration: BoxDecoration(
-                color: const Color(0xFF83B9FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  'New Chat',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 24,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Video Chat Button
-        Positioned(
-          left: 78,
-          top: 510,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => JoinScreen()),
-              );
-            },
-            child: Container(
-              width: 247,
-              height: 55,
-              decoration: BoxDecoration(
-                color: const Color(0xFFA5D6A7), // Light green color
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  'Video Chat',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Browse Categories Button
-        Positioned(
-          left: 120,
-          top: 580, // Adjusted position below Video Chat button
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => CategoriesScreen()),
-              );
-            },
-            child: Container(
-              width: 180,
-              height: 55,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  'Browse Categories',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
 }
