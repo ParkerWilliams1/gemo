@@ -115,7 +115,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   ),
                 ),
 
-              // Local user’s camera preview in the top-right corner
+              // Local user's camera preview in the top-right corner
               Positioned(
                 top: 16,
                 right: 16,
@@ -126,6 +126,33 @@ class _MeetingScreenState extends State<MeetingScreen> {
                     key: Key(localParticipant.id),
                     participant: localParticipant,
                     isMainView: false,
+                  ),
+                ),
+              ),
+
+              // Meeting ID in the top-left corner
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.videocam, color: Colors.white, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Meeting ID: ${widget.meetingId}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
