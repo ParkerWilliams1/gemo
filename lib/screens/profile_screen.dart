@@ -13,7 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemo/providers/user_profile_provider.dart';
-import '../providers/user_profile_notifier.dart';
+// import '../providers/user_profile_notifier.dart';
 import 'package:gemo/constants/majors.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_home_screen.dart';
 import 'screens/sign_in_screen.dart';
@@ -9,6 +8,7 @@ import 'firebase_options.dart';
 import 'screens/sign_up_screen.dart';
 import 'video_stream/join_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'services/image_upload_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

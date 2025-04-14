@@ -22,6 +22,9 @@ dependencies:
   http: ^1.3.0
   collection: ^1.19.0
   flutter_riverpod: ^2.0.1
+  image_picker: ^1.1.2
+  firebase_storage: ^12.4.5
+  logger: ^2.5.0
 
 dev_dependencies:
   flutter_test:
@@ -42,3 +45,31 @@ flutter:
    - assets/background.png
    - assets/gemo.png
    - assets/HomeScreen.png
+   - assets/images/default.png
+   - assets/images/gold.png
+   - assets/images/silver.png
+   - assets/images/bronze.png
+   - assets/images/music.png
+   - assets/images/gaming.png
+   - assets/images/movies.png
+   - assets/images/sports.png
+   - assets/images/travel.png
+   - assets/images/fitness.png
+   - assets/images/fashion.png
+   - assets/images/food.png
+   - assets/images/photography.png
+   - assets/images/health.png
+   - assets/images/business.png
+   - assets/images/finance.png
+   - assets/images/electricalengineering.png
+   - assets/images/calculus.png
+   - assets/images/physics.png
+   - assets/images/chemistry.png
+   - assets/images/economics.png
+   - assets/images/psychology.png
+   - assets/images/history.png
+   - assets/images/computerscience.png
+   - assets/images/mechanicalengineering.png
+   - assets/images/civilengineering.png
+   - assets/images/chemicalengineering.png
+   - assets/images/bioengineering.png

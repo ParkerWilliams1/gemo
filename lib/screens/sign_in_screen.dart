@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:gemo/auth_service.dart';
+import 'package:gemo/services/auth_service.dart';
 import 'package:gemo/screens/chat_home_screen.dart';
-import 'package:gemo/screens/home_screen.dart';
+// import 'package:gemo/screens/home_screen.dart';
 import 'package:gemo/screens/sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
