@@ -8,7 +8,6 @@ import 'firebase_options.dart';
 import 'screens/sign_up_screen.dart';
 import 'video_stream/join_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'services/image_upload_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
