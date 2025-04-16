@@ -8,13 +8,13 @@
  */
 
 // Import Firebase Admin and Function
-const functions = require("firebase-functions");
+const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
 
 exports.resetCategoryClicks = functions.pubsub
-    .schedule("every 48 hours") // Runs every 48 hours
+    .schedule("every 24 hours") // Runs every 24 hours
     .onRun(async (context) => {
       const db = admin.firestore();
       const categoriesRef = db.collection("categories");
