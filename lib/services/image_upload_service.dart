@@ -1,12 +1,11 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
+import 'package:logging/logging.dart';
 import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
 
 class ImageUploadService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final Logger _logger = Logger(); // Initialize the Logger instance
 
   Future<void> uploadImages() async {
     List<String> imagePaths = [
@@ -65,9 +64,9 @@ class ImageUploadService {
         'uploadedAt': FieldValue.serverTimestamp(),
       });
 
-      _logger.i("Image uploaded successfully: $downloadUrl");
+      Logger("Image uploaded successfully: $downloadUrl");
     } catch (e) {
-      _logger.e("Error uploading image: $e");
+      Logger("Error uploading image: $e");
     }
   }
 }

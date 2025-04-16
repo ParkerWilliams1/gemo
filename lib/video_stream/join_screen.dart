@@ -106,7 +106,7 @@ class JoinScreen extends StatelessWidget {
                 Container(
                   width: 247,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withAlpha(204),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(

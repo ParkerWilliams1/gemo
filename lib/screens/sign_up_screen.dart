@@ -42,7 +42,7 @@ class SignUpScreenState extends State<SignUpScreen> {
         await userCredential.user?.sendEmailVerification();
 
         final uid = userCredential.user?.uid;
-        if (uid != null && context.mounted) {
+        if (uid != null && mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -51,9 +51,11 @@ class SignUpScreenState extends State<SignUpScreen> {
           );
         }
       } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? "An error occurred")),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? "An error occurred")),
+          );
+        }
       }
     }
   }
@@ -88,7 +90,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withAlpha(64),
                     blurRadius: 4,
                     offset: const Offset(0, 4),
                   )
@@ -136,7 +138,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                   height: 43,
                   decoration: ShapeDecoration(
                     shape: RoundedRectangleBorder(
-                      side: const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
+                      side:
+                          const BorderSide(width: 1, color: Color(0xFFD9D9D9)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
@@ -144,8 +147,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                     controller: _emailController,
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
                       errorText: _emailError,
                     ),
                   ),

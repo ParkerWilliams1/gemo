@@ -48,7 +48,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
       setState(() => _loading = false);
 
-      Navigator.pushReplacementNamed(context, '/home');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     }
   }
 
@@ -100,8 +102,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             style: TextStyle(fontSize: 16)),
                         Switch(
                           value: _isTutor,
-                          onChanged: (val) =>
-                              setState(() => _isTutor = val),
+                          onChanged: (val) => setState(() => _isTutor = val),
                         ),
                       ],
                     ),

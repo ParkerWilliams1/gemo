@@ -62,7 +62,7 @@ class MeetingControls extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withAlpha(51),
             blurRadius: 4,
             offset: Offset(0, 2),
           ),

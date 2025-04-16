@@ -28,7 +28,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
     _room = VideoSDK.createRoom(
       roomId: widget.meetingId,
       token: widget.token,
-      // TODO: Put in place a function that will pull displayName from their Firebase
+      // TO-DO: Put in place a function that will pull displayName from their Firebase.
       displayName: "John Doe",
       micEnabled: micEnabled,
       camEnabled: camEnabled,
