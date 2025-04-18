@@ -8,7 +8,7 @@ lib/firebase_options.dart
 
 # Build + Platform folders
 build/
-android/
+# android/
 ios/
 linux/
 web/
