@@ -245,7 +245,7 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('lib/images/HomeScreen.png'),
+                image: AssetImage('assets/HomeScreen.png'),
                 fit: BoxFit.cover,
               ),
             ),
