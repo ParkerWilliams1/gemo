@@ -63,7 +63,7 @@ class _ParticipantTileState extends State<ParticipantTile> {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3), // Soft shadow
+                  color: Colors.black.withAlpha(77), // Soft shadow
                   blurRadius: 6,
                   spreadRadius: 2,
                 ),

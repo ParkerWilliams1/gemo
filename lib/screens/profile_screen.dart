@@ -300,8 +300,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         floatingActionButton: isTutor ? FloatingActionButton(
           mini: true,
           onPressed: _scrollToBottom,
-          child: const Icon(Icons.arrow_downward),
           tooltip: 'Scroll to bottom',
+          child: const Icon(Icons.arrow_downward),
         ) : null,  // No FAB when tutor mode is disabled
       ),
     );
