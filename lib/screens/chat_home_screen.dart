@@ -21,6 +21,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
   bool _isMatching = false;
   StreamSubscription<DocumentSnapshot>? _matchSubscription;
+  String _currentCategory = 'General';
 
   @override
   void dispose() {
@@ -37,7 +38,10 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   }
 
   Future<void> _startVideoMatch(String category) async {
-    setState(() => _isMatching = true);
+    setState(() {
+    _isMatching = true;
+    _currentCategory = category; // Set the current category
+    });
 
     try {
       final result = await _functions
@@ -78,7 +82,8 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       MaterialPageRoute(
         builder: (context) => MeetingScreen(
           meetingId: roomId,
-          token: "my_token_goes_here",
+          token: "my_token_here",
+          category: _currentCategory,
         ),
       ),
     ).then((_) => setState(() => _isMatching = false));
