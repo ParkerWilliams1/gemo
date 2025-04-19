@@ -7,6 +7,7 @@ import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
 import 'package:gemo/video_stream/meeting_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
+import 'package:gemo/screens/combined_chat_screen.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
@@ -77,17 +78,18 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   }
 
   void _joinVideoRoom(String roomId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MeetingScreen(
-          meetingId: roomId,
-          token: "my_token_here",
-          category: _currentCategory,
-        ),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => CombinedChatScreen(
+        chatId: roomId, // or generate a separate chat ID if needed
+        meetingId: roomId,
+        token: "my_token_here",
+        category: _currentCategory,
       ),
-    ).then((_) => setState(() => _isMatching = false));
-  }
+    ),
+  ).then((_) => setState(() => _isMatching = false));
+}
 
   Future<void> _cancelMatch() async {
     await _cleanupWaitingRoom();

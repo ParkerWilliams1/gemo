@@ -8,12 +8,16 @@ class MeetingScreen extends StatefulWidget {
   final String meetingId;
   final String token;
   final String category;
+  final void Function() onToggleChat;
+  final bool isChatOpen;
 
   const MeetingScreen({
     super.key,
     required this.meetingId,
     required this.token,
     required this.category,
+    required this.onToggleChat,
+    required this.isChatOpen,
   });
 
   @override
@@ -83,6 +87,14 @@ class _MeetingScreenState extends State<MeetingScreen> {
         );
       }
     });
+
+    // In MeetingScreen's setMeetingEventListener:
+_room.on(Events.roomLeft, (Map<String, dynamic> args) {
+  if (mounted) {
+    participants.clear();
+    Navigator.pop(context); // Just pop the current screen
+  }
+});
   }
 
   // Handle leaving the room when back button is pressed
@@ -91,12 +103,9 @@ class _MeetingScreenState extends State<MeetingScreen> {
     return true;
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
-    // Get the local participant
     final localParticipant = _room.localParticipant;
-    
-    // Get the first remote participant (if available)
     final remoteParticipants = participants.values.where((p) => p.id != localParticipant.id).toList();
     final Participant? remoteParticipant = remoteParticipants.isNotEmpty ? remoteParticipants.first : null;
 
@@ -107,7 +116,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Stack(
             children: [
-              // Show remote participant in fullscreen if available
+              // Remote participant view
               if (remoteParticipant != null)
                 Positioned.fill(
                   child: ParticipantTile(
@@ -117,7 +126,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   ),
                 ),
 
-              // Local user's camera preview in the top-right corner
+              // Local participant preview
               Positioned(
                 top: 16,
                 right: 16,
@@ -132,7 +141,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 ),
               ),
 
-              // Current Category Icon
+              // Category label
               Positioned(
                 top: 16,
                 left: 16,
@@ -159,7 +168,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 ),
               ),
 
-              // Meeting controls at the bottom
+              // Meeting controls
               Positioned(
                 bottom: 16,
                 left: 0,
@@ -180,6 +189,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   onLeaveButtonPressed: () {
                     _room.leave();
                   },
+                  onToggleChatButtonPressed: widget.onToggleChat,
+                  isChatOpen: widget.isChatOpen,
                 ),
               ),
             ],
