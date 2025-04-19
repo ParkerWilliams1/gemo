@@ -5,9 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
-import 'package:gemo/video_stream/meeting_screen.dart';
-import 'package:gemo/screens/categories_screen.dart';
 import 'package:gemo/screens/combined_chat_screen.dart';
+
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
@@ -161,40 +160,52 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 ),
                 SizedBox(height: 100),
                 ElevatedButton(
-                  onPressed: () => _startVideoMatch('General'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF83B9FF),
-                    padding: EdgeInsets.symmetric(horizontal: 80, vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Start Video Chat',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CategoriesScreen()),
-                  ),
-                  child: const Text(
-                    'Browse Categories',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+  onPressed: () => _startVideoMatch('General'),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color(0xFF83B9FF),
+    padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 20),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ),
+  child: const Text(
+    'New Chat',
+    style: TextStyle(
+      color: Colors.black,
+      fontSize: 24,
+      fontFamily: 'Inter',
+      fontWeight: FontWeight.w700,
+    ),
+  ),
+),
+const SizedBox(height: 20),
+SizedBox(
+  width: 200, // adjust this to control the width
+  child: ElevatedButton(
+    onPressed: () => Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CategoriesScreen()),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFFD3D3D3), // Light grey
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    child: const Text(
+      'Browse Categories',
+      style: TextStyle(
+        color: Colors.black,
+        fontSize: 18,
+        fontFamily: 'Inter',
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ),
+),
+
+
               ],
             ),
           )

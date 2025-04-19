@@ -1,9 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/matchmaking_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
+import 'package:gemo/screens/chat_home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:gemo/video_stream/meeting_screen.dart';
+import 'package:gemo/screens/combined_chat_screen.dart';
 
 class Category {
   String name;
@@ -32,6 +39,60 @@ class CategoriesScreen extends StatefulWidget {
 
 class CategoriesScreenState extends State<CategoriesScreen> {
   bool _isMatching = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  StreamSubscription<DocumentSnapshot>? _matchSubscription;
+  String _currentCategory = 'General';
+
+  @override
+  void dispose() {
+    _matchSubscription?.cancel();
+    _cleanupWaitingRoom();
+    super.dispose();
+  }
+
+  Future<void> _cleanupWaitingRoom() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      await _firestore.collection('rooms').doc(uid).delete();
+    }
+  }
+
+  Future<void> _cancelMatch() async {
+    await _cleanupWaitingRoom();
+    _matchSubscription?.cancel();
+    setState(() => _isMatching = false);
+  }
+
+  void _listenForMatch() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    _matchSubscription = _firestore
+        .collection('rooms')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
+      if (doc.exists && doc.data()?['status'] == 'matched') {
+        _joinVideoRoom(doc.data()?['roomId']);
+      }
+    });
+  }
+
+  void _joinVideoRoom(String roomId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CombinedChatScreen(
+          chatId: roomId,
+          meetingId: roomId,
+          token: "my_token_here",
+          category: _currentCategory,
+        ),
+      ),
+    ).then((_) => setState(() => _isMatching = false));
+  }
 
   // Combine interests and majors into a single categories map with a "group" field
   List<Map<String, dynamic>> categories = [
@@ -271,171 +332,199 @@ class CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   void startMatching(String category) async {
-    setState(() => _isMatching = true);
+    setState(() {
+      _isMatching = true;
+      _currentCategory = category;
+    });
 
     try {
-      // Find the category document in Firestore
+      // Update clicks in Firestore
       final categoryDoc = await FirebaseFirestore.instance
           .collection('categories')
-          .where('displayName', isEqualTo: category) // Match by displayName
+          .where('displayName', isEqualTo: category)
           .limit(1)
           .get();
 
       if (categoryDoc.docs.isNotEmpty) {
         final docId = categoryDoc.docs.first.id;
-
-        // Increment the clicks field in Firestore
         await FirebaseFirestore.instance
             .collection('categories')
             .doc(docId)
             .update({"clicks": FieldValue.increment(1)});
-
-        // Update the local categories list
-        setState(() {
-          final index =
-              categories.indexWhere((cat) => cat["displayName"] == category);
-          if (index != -1) {
-            categories[index]["clicks"] +=
-                1; // Increment the local clicks count
-          }
-        });
       }
-    } catch (e) {
-      Logger("Error updating category clicks in Firestore: $e");
-    }
 
-    if (mounted) {
-      await MatchmakingService().startCategoryChat(context, category);
+      // Start video matching
+      final result = await _functions
+          .httpsCallable('matchUser')
+          .call({'category': category});
+
+      if (result.data['isNewMatch'] == true) {
+        _joinVideoRoom(result.data['roomId']);
+      } else {
+        _listenForMatch();
+      }
+
+      // Update local clicks
+      setState(() {
+        final index = categories.indexWhere((cat) => cat["displayName"] == category);
+        if (index != -1) {
+          categories[index]["clicks"] += 1;
+        }
+      });
+    } catch (e) {
+      Logger("Error in matching: $e");
       setState(() => _isMatching = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start video chat: ${e.toString()}')),
+        );
+      }
     }
   }
 
+  
   @override
-  Widget build(BuildContext context) {
-    // Filter categories by group
-    final interestCategories =
-        categories.where((cat) => cat["group"] == "interest").toList();
-    final majorCategories =
-        categories.where((cat) => cat["group"] == "major").toList();
+Widget build(BuildContext context) {
+  // Filter categories by group
+  final interestCategories =
+      categories.where((cat) => cat["group"] == "interest").toList();
+  final majorCategories =
+      categories.where((cat) => cat["group"] == "major").toList();
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(
-          surfaceTintColor: Colors.transparent,
-          shadowColor: Colors.black,
-          title: Text(
-            'Categories',
-            style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          actions: <Widget>[
-            IconButton(
-              padding: const EdgeInsets.only(right: 20),
-              icon: const Icon(Icons.menu, color: Colors.black, size: 28),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MenuScreen()),
-                );
-              },
-            ),
-          ],
-          elevation: 1,
+  return Directionality(
+    textDirection: TextDirection.ltr,
+    child: Scaffold(
+      appBar: AppBar(
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black,
+        title: Text(
+          'Categories',
+          style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        body: Stack(children: [
-          // Background Image
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/HomeScreen.png'),
-                fit: BoxFit.cover,
-              ),
+        actions: <Widget>[
+          IconButton(
+            padding: const EdgeInsets.only(right: 20),
+            icon: const Icon(Icons.menu, color: Colors.black, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MenuScreen()),
+              );
+            },
+          ),
+        ],
+        elevation: 1,
+      ),
+      body: Stack(children: [
+        // Background Image
+        Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/HomeScreen.png'),
+              fit: BoxFit.cover,
             ),
           ),
-          if (_isMatching)
-            const Center(child: CircularProgressIndicator())
-          else
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: trendingCategories,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Error loading trending categories.',
-                      style: GoogleFonts.inter(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+        ),
+        if (_isMatching)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text('Finding your match...', 
+                    style: GoogleFonts.inter(fontSize: 18, color: Colors.black)),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _cancelMatch,
+                  child: Text('Cancel'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: trendingCategories,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Error loading trending categories.',
+                    style: GoogleFonts.inter(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 10),
-                    child: Text(
-                      'No trending categories yet.',
-                      style: GoogleFonts.inter(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                );
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  child: Text(
+                    'No trending categories yet.',
+                    style: GoogleFonts.inter(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                } else {
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                            height:
-                                40), // Add spacing above "Trending Categories"
-                        // Trending Categories Section
-                        buildCategorySection(
-                          context,
-                          "Trending",
-                          snapshot.data!,
-                        ),
-                        // Interest Categories Section
-                        buildCategorySection(
-                          context,
-                          "Interests",
-                          interestCategories,
-                        ),
-                        // Major Categories Section
-                        buildCategorySection(
-                          context,
-                          "Majors",
-                          majorCategories,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 70, top: 80),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              "Looking for a tutor?",
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
+                  ),
+                );
+              } else {
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 40),
+                      // Trending Categories Section
+                      buildCategorySection(
+                        context,
+                        "Trending",
+                        snapshot.data!,
+                      ),
+                      // Interest Categories Section
+                      buildCategorySection(
+                        context,
+                        "Interests",
+                        interestCategories,
+                      ),
+                      // Major Categories Section
+                      buildCategorySection(
+                        context,
+                        "Majors",
+                        majorCategories,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 70, top: 80),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "Looking for a tutor?",
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 15),
-                        buildTutorMatchBox(),
-                      ],
-                    ),
-                  );
-                }
-              },
-            ),
-        ]),
-      ),
-    );
-  }
+                      ),
+                      const SizedBox(height: 15),
+                      buildTutorMatchBox(),
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
+      ]),
+    ),
+  );
+}
 
   Widget buildCategorySection(
       BuildContext context, String title, List<Map<String, dynamic>> items) {
