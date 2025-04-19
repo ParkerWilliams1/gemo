@@ -1,3 +1,5 @@
+// Merged CategoriesScreen with full functionality + image-based tiles
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,9 +8,10 @@ import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/matchmaking_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
-import 'package:gemo/screens/combined_chat_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:gemo/video_stream/meeting_screen.dart';
+import 'package:gemo/screens/combined_chat_screen.dart';
 
 class Category {
   String name;
@@ -37,8 +40,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
   bool _isMatching = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions =
-      FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
   StreamSubscription<DocumentSnapshot>? _matchSubscription;
   String _currentCategory = 'General';
 
@@ -102,11 +104,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    _matchSubscription = _firestore
-        .collection('rooms')
-        .doc(uid)
-        .snapshots()
-        .listen((doc) {
+    _matchSubscription = _firestore.collection('rooms').doc(uid).snapshots().listen((doc) {
       if (doc.exists && doc.data()?['status'] == 'matched') {
         _joinVideoRoom(doc.data()?['roomId']);
       }
@@ -117,10 +115,10 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CombinedChatScreen(
+        builder: (_) => CombinedChatScreen(
           chatId: roomId,
           meetingId: roomId,
-          token: "your-hardcoded-jwt-token",
+          token: "token-goes-here",
           category: _currentCategory,
         ),
       ),
@@ -131,11 +129,10 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     try {
       List<Category> fetched = await fetchCategories();
       setState(() {
-        for (var fetchedCategory in fetched) {
-          final index = categories.indexWhere(
-              (cat) => cat["displayName"] == fetchedCategory.name);
+        for (var cat in fetched) {
+          final index = categories.indexWhere((c) => c["displayName"] == cat.name);
           if (index != -1) {
-            categories[index]["clicks"] = fetchedCategory.clicks;
+            categories[index]["clicks"] = cat.clicks;
           }
         }
       });
@@ -149,10 +146,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
       await Future.delayed(const Duration(milliseconds: 70));
       List<Map<String, dynamic>> sorted = List.from(categories);
       sorted.sort((a, b) => b["clicks"].compareTo(a["clicks"]));
-      final trendingData = sorted.take(3).map((cat) => {
-            ...cat,
-            "image": "images/images/default.png"
-          }).toList();
+      final trendingData = sorted.take(3).toList();
 
       for (int i = 0; i < trendingData.length; i++) {
         trendingData[i]["image"] = [
@@ -183,15 +177,10 @@ class CategoriesScreenState extends State<CategoriesScreen> {
           .get();
 
       if (snap.docs.isNotEmpty) {
-        await _firestore
-            .collection('categories')
-            .doc(snap.docs.first.id)
-            .update({"clicks": FieldValue.increment(1)});
+        await _firestore.collection('categories').doc(snap.docs.first.id).update({"clicks": FieldValue.increment(1)});
       }
 
-      final result = await _functions
-          .httpsCallable('matchUser')
-          .call({'category': category});
+      final result = await _functions.httpsCallable('matchUser').call({'category': category});
 
       if (result.data['isNewMatch'] == true) {
         _joinVideoRoom(result.data['roomId']);
@@ -200,8 +189,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
       }
 
       setState(() {
-        final index =
-            categories.indexWhere((cat) => cat["displayName"] == category);
+        final index = categories.indexWhere((c) => c["displayName"] == category);
         if (index != -1) {
           categories[index]["clicks"] += 1;
         }
@@ -219,10 +207,8 @@ class CategoriesScreenState extends State<CategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final interestCategories =
-        categories.where((c) => c["group"] == "interest").toList();
-    final majorCategories =
-        categories.where((c) => c["group"] == "major").toList();
+    final interestCategories = categories.where((c) => c["group"] == "interest").toList();
+    final majorCategories = categories.where((c) => c["group"] == "major").toList();
 
     return Scaffold(
       appBar: AppBar(
