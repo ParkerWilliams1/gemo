@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gemo/models/user_profile.dart';
-import 'package:gemo/constants/majors.dart'; // Make sure this file contains `majorsList`
+import 'package:gemo/constants/majors.dart'; // Ensure this contains `majorsList`
 
 class ProfileSetupScreen extends StatefulWidget {
   final String uid;
@@ -21,6 +21,28 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   String? _selectedMajor;
   bool _isTutor = false;
   bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingProfile();
+  }
+
+  Future<void> _loadExistingProfile() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.uid)
+        .get();
+
+    if (doc.exists) {
+      final data = doc.data()!;
+      _nameController.text = data['name'] ?? '';
+      _ageController.text = data['age']?.toString() ?? '';
+      _selectedMajor = data['major'];
+      _isTutor = data['isTutor'] ?? false;
+      setState(() {}); // Refresh UI
+    }
+  }
 
   void _submitProfile() async {
     if (_formKey.currentState!.validate()) {
@@ -48,7 +70,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
       setState(() => _loading = false);
 
-      Navigator.pushReplacementNamed(context, '/home');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     }
   }
 
@@ -66,14 +90,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   children: [
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: "Name"),
+                      decoration: const InputDecoration(
+                        labelText: "Name",
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
                       validator: (value) =>
                           value!.isEmpty ? "Enter your name" : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _ageController,
-                      decoration: const InputDecoration(labelText: "Age"),
+                      decoration: const InputDecoration(
+                        labelText: "Age",
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
                       keyboardType: TextInputType.number,
                       validator: (value) =>
                           value!.isEmpty ? "Enter your age" : null,
@@ -81,7 +113,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: _selectedMajor,
-                      decoration: const InputDecoration(labelText: "Major"),
+                      decoration: const InputDecoration(
+                        labelText: "Major",
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
                       items: majorsList
                           .map((major) => DropdownMenuItem(
                                 value: major,
@@ -90,14 +126,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           .toList(),
                       onChanged: (val) => setState(() => _selectedMajor = val),
                       validator: (val) =>
-                          val == null ? "Please select a major" : null,
+                          val == null || val.isEmpty ? "Please select a major" : null,
                     ),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text("Enable Tutoring Profile",
-                            style: TextStyle(fontSize: 16)),
+                        const Text(
+                          "Enable Tutoring Profile",
+                          style: TextStyle(fontSize: 16),
+                        ),
                         Switch(
                           value: _isTutor,
                           onChanged: (val) =>
@@ -115,5 +153,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ),
             ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    super.dispose();
   }
 }
