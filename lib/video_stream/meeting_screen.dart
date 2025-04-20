@@ -7,9 +7,18 @@ import './participant_tile.dart';
 class MeetingScreen extends StatefulWidget {
   final String meetingId;
   final String token;
+  final String category;
+  final void Function() onToggleChat;
+  final bool isChatOpen;
 
-  const MeetingScreen(
-      {super.key, required this.meetingId, required this.token});
+  const MeetingScreen({
+    super.key,
+    required this.meetingId,
+    required this.token,
+    required this.category,
+    required this.onToggleChat,
+    required this.isChatOpen,
+  });
 
   @override
   State<MeetingScreen> createState() => _MeetingScreenState();
@@ -24,26 +33,21 @@ class _MeetingScreenState extends State<MeetingScreen> {
 
   @override
   void initState() {
-    // create room
+    super.initState();
+
+    // Create room
     _room = VideoSDK.createRoom(
       roomId: widget.meetingId,
       token: widget.token,
-      // TODO: Put in place a function that will pull displayName from their Firebase
       displayName: "John Doe",
       micEnabled: micEnabled,
       camEnabled: camEnabled,
-      // multiStream is disabled to fix camera issue
-      multiStream: false,
-      // Set default camera to 0 when on laptop/pc (webcam) & 1 when on mobile (front-facing)
-      defaultCameraIndex: kIsWeb ? 0 : 1 
+      multiStream: false, // Ensure single stream mode
+      defaultCameraIndex: kIsWeb ? 0 : 1,
     );
 
     setMeetingEventListener();
-
-    // Join room
     _room.join();
-
-    super.initState();
   }
 
   @override
@@ -53,99 +57,140 @@ class _MeetingScreenState extends State<MeetingScreen> {
     }
   }
 
-void setMeetingEventListener() {
-  _room.on(Events.roomJoined, () {
-    setState(() {
-      participants.putIfAbsent(
-          _room.localParticipant.id, () => _room.localParticipant);
+  void setMeetingEventListener() {
+    _room.on(Events.roomJoined, () {
+      setState(() {
+        participants[_room.localParticipant.id] = _room.localParticipant;
+      });
     });
-  });
 
-  _room.on(
-    Events.participantJoined,
-    (Participant participant) {
-      setState(
-        () => participants.putIfAbsent(participant.id, () => participant),
-      );
-    },
-  );
+    _room.on(Events.participantJoined, (Participant participant) {
+      setState(() {
+        participants[participant.id] = participant;
+      });
+    });
 
-  _room.on(Events.participantLeft, (String participantId) {
-    if (participants.containsKey(participantId)) {
-      setState(() => participants.remove(participantId));
-    }
-  });
+    _room.on(Events.participantLeft, (String participantId) {
+      if (participants.containsKey(participantId)) {
+        setState(() {
+          participants.remove(participantId);
+        });
+      }
+    });
 
-  _room.on(Events.roomLeft, () {
-    if (mounted) {
-      participants.clear();
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/home', // Your HomeScreen route
-        (Route<dynamic> route) => false,
-      );
-    }
-  });
-}
+    _room.on(Events.roomLeft, () {
+      if (mounted) {
+        participants.clear();
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/home',
+          (Route<dynamic> route) => false,
+        );
+      }
+    });
 
-  // onbackButton pressed leave the room
+    // In MeetingScreen's setMeetingEventListener:
+_room.on(Events.roomLeft, (Map<String, dynamic> args) {
+  if (mounted) {
+    participants.clear();
+    Navigator.pop(context); // Just pop the current screen
+  }
+});
+  }
+
+  // Handle leaving the room when back button is pressed
   Future<bool> _onWillPop() async {
     _room.leave();
-    _room.end();
     return true;
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
+    final localParticipant = _room.localParticipant;
+    final remoteParticipants = participants.values.where((p) => p.id != localParticipant.id).toList();
+    final Participant? remoteParticipant = remoteParticipants.isNotEmpty ? remoteParticipants.first : null;
+
     return WillPopScope(
-      onWillPop: () => _onWillPop(),
+      onWillPop: _onWillPop,
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Stack(
             children: [
-              // Main view for the remote user
-              if (participants.isNotEmpty)
+              // Remote participant view
+              if (remoteParticipant != null)
                 Positioned.fill(
                   child: ParticipantTile(
-                    key: Key(participants.values.first.id),
-                    participant: participants.values.first,
+                    key: Key(remoteParticipant.id),
+                    participant: remoteParticipant,
                     isMainView: true,
                   ),
                 ),
 
-              // Local user's camera in a smaller box at the top-right corner
-              if (participants.length > 1)
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: SizedBox(
-                    width: 120,
-                    height: 160,
-                    child: ParticipantTile(
-                      key: Key(participants.values.elementAt(1).id),
-                      participant: participants.values.elementAt(1),
-                      isMainView: false,
-                    ),
+              // Local participant preview
+              Positioned(
+                top: 16,
+                right: 16,
+                child: SizedBox(
+                  width: 120,
+                  height: 160,
+                  child: ParticipantTile(
+                    key: Key(localParticipant.id),
+                    participant: localParticipant,
+                    isMainView: false,
                   ),
                 ),
+              ),
 
-              // Meeting controls at the bottom
+              // Category label
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _getCategoryColor(widget.category),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.category, color: Colors.white, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        widget.category,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Meeting controls
               Positioned(
                 bottom: 16,
                 left: 0,
                 right: 0,
                 child: MeetingControls(
                   onToggleMicButtonPressed: () {
-                    micEnabled ? _room.muteMic() : _room.unmuteMic();
-                    micEnabled = !micEnabled;
+                    setState(() {
+                      micEnabled ? _room.muteMic() : _room.unmuteMic();
+                      micEnabled = !micEnabled;
+                    });
                   },
                   onToggleCameraButtonPressed: () {
-                    camEnabled ? _room.disableCam() : _room.enableCam();
-                    camEnabled = !camEnabled;
+                    setState(() {
+                      camEnabled ? _room.disableCam() : _room.enableCam();
+                      camEnabled = !camEnabled;
+                    });
                   },
                   onLeaveButtonPressed: () {
                     _room.leave();
                   },
+                  onToggleChatButtonPressed: widget.onToggleChat,
+                  isChatOpen: widget.isChatOpen,
                 ),
               ),
             ],
@@ -154,4 +199,38 @@ void setMeetingEventListener() {
       ),
     );
   }
+
+  Color _getCategoryColor(String categoryName) {
+  // This is a simplified version - you might want to fetch this from Firestore
+  // or pass it directly from the chat home screen
+  final categoryColors = {
+    'Music': Color(0xFF0080FF),
+    'Gaming': Color(0xFF008000),
+    'Movies': Color(0xFFff5733),
+    'Sports': Color(0xFFFFA500),
+    'Travel': Color(0xFFAC33FF),
+    'Fitness': Color(0xFFFFFF00),
+    'Fashion': Color(0xFFFE7AE2),
+    'Food': Color(0xFFFFC0CB),
+    'Photography': Color(0xFF00FFFF),
+    'Health': Color(0xFFFE5EE6),
+    'Business': Color(0xFF00FF00),
+    'Finance': Color(0xFFFFBF00),
+    'Electrical Engineering': Color(0xFFFF5454),
+    'Calculus': Color(0xFFFFBF00),
+    'Physics': Color(0xFF008080),
+    'Chemistry': Color(0xFFFFC0CB),
+    'Economics': Color(0xFF00FFFF),
+    'Psychology': Color(0xFFA254FF),
+    'History': Color(0xFFE7BB92),
+    'Computer Science': Color(0xFF0080FF),
+    'Mechanical Engineering': Color(0xFF008000),
+    'Civil Engineering': Color(0xFFFFA500),
+    'Chemical Engineering': Color(0xFF00FF00),
+    'Bio Engineering': Color(0xFFFFFF00),
+    'General': Color.fromARGB(255, 132, 132, 132),
+  };
+  
+  return categoryColors[categoryName] ?? Color.fromARGB(255, 132, 132, 132);
+}
 }

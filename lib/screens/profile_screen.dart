@@ -11,7 +11,7 @@
 */
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for HapticFeedback
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemo/providers/user_profile_provider.dart';
 import '../providers/user_profile_notifier.dart';
@@ -27,79 +27,66 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  // Scroll controller to manage scrolling behavior
   final ScrollController _scrollController = ScrollController();
-  
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
   final TextEditingController majorController = TextEditingController();
-  
-  // Tutor-specific controllers
+
   final TextEditingController bioController = TextEditingController();
   final TextEditingController experienceController = TextEditingController();
   final TextEditingController rateController = TextEditingController();
 
   String? selectedMajor;
   bool isTutor = false;
-  
-  // Tutor-specific fields
   List<String> selectedSubjects = [];
   List<String> availableDays = [];
   String? educationLevel;
 
-  // Constants for tutor fields
-  final List<String> subjectsList = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 
-                                    'Computer Science', 'Literature', 'History', 'Geography',
-                                    'Economics', 'Psychology', 'Foreign Languages'];
-  
-  final List<String> daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 
-                                   'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  
-  final List<String> educationLevels = ['Undergraduate', 'Bachelor\'s Degree', 
-                                       'Master\'s Degree', 'Ph.D.', 'Other'];
-  
-  // Track if we're currently auto-scrolling to avoid loops
+  bool _initialized = false;
   bool _isAutoScrolling = false;
+
+  final List<String> subjectsList = [
+    'Mathematics', 'Physics', 'Chemistry', 'Biology',
+    'Computer Science', 'Literature', 'History', 'Geography',
+    'Economics', 'Psychology', 'Foreign Languages'
+  ];
+
+  final List<String> daysOfWeek = [
+    'Monday', 'Tuesday', 'Wednesday',
+    'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ];
+
+  final List<String> educationLevels = [
+    'Undergraduate', 'Bachelor\'s Degree',
+    'Master\'s Degree', 'Ph.D.', 'Other'
+  ];
 
   @override
   void initState() {
     super.initState();
-    
-    // Add listener to scroll controller for scroll events
     _scrollController.addListener(_scrollListener);
   }
 
   void _scrollListener() {
-    // Implement custom scroll behavior if needed
-    // For example, you could add haptic feedback when reaching bottom
-    if (_scrollController.position.atEdge) {
-      if (_scrollController.position.pixels != 0 && !_isAutoScrolling) {
-        // At bottom of list - provide light haptic feedback
-        HapticFeedback.lightImpact();
-      }
-    }
-  }
-  
-  // Method to scroll to a specific widget or position
-  void _scrollToPosition(double position) {
-    if (_scrollController.hasClients) {
-      setState(() {
-        _isAutoScrolling = true;
-      });
-      
-      _scrollController.animateTo(
-        position,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      ).then((_) {
-        setState(() {
-          _isAutoScrolling = false;
-        });
-      });
+    if (_scrollController.position.atEdge &&
+        _scrollController.position.pixels != 0 &&
+        !_isAutoScrolling) {
+      HapticFeedback.lightImpact();
     }
   }
 
-  // Method to scroll to bottom of page (useful after enabling tutor mode)
+  void _scrollToPosition(double position) {
+    if (_scrollController.hasClients) {
+      setState(() => _isAutoScrolling = true);
+      _scrollController
+          .animateTo(position,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut)
+          .then((_) => setState(() => _isAutoScrolling = false));
+    }
+  }
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollToPosition(_scrollController.position.maxScrollExtent);
@@ -107,30 +94,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final profile = ref.read(userProfileNotifierProvider);
-    profile.whenData((p) {
-      nameController.text = p.name;
-      ageController.text = p.age?.toString() ?? '';
-      majorController.text = p.major ?? '';
-      selectedMajor = majorsList.contains(p.major) ? p.major : null;
-      isTutor = p.isTutor ?? false;
-      
-      // Initialize tutor fields if they exist
-      if (p.tutorProfile != null) {
-        bioController.text = p.tutorProfile?.bio ?? '';
-        experienceController.text = p.tutorProfile?.yearsExperience?.toString() ?? '';
-        selectedSubjects = p.tutorProfile?.subjects?.toList() ?? [];
-        availableDays = p.tutorProfile?.availableDays?.toList() ?? [];
-        educationLevel = p.tutorProfile?.educationLevel;
-      }
-    });
-  }
-
-  @override
   void dispose() {
-    // Dispose controllers to prevent memory leaks
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     nameController.dispose();
@@ -143,9 +107,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _saveProfileChanges() async {
-    // Create a map for tutor profile data if tutor mode is enabled
     Map<String, dynamic>? tutorProfileData;
-    
+
     if (isTutor) {
       tutorProfileData = {
         'bio': bioController.text.trim(),
@@ -161,7 +124,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           age: int.tryParse(ageController.text.trim()),
           major: selectedMajor,
           isTutor: isTutor,
-          tutorProfile: isTutor ? tutorProfileData : null,
+          tutorProfile: tutorProfileData,
         );
 
     if (mounted) {
@@ -182,137 +145,124 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       error: (e, _) => Scaffold(
         body: Center(child: Text("Error loading profile: $e")),
       ),
-      data: (profile) => Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: const Text('Profile'),
-          centerTitle: true,
-          // Add scroll to top button in app bar
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.arrow_upward),
-              onPressed: () {
-                _scrollToPosition(0);
-              },
-            ),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ListView(
-            controller: _scrollController, // Assign scroll controller to ListView
-            physics: const AlwaysScrollableScrollPhysics(), // Always allow scrolling
-            children: [
-              _buildProfileField('Name', nameController),
-              _buildProfileField('Age', ageController,
-                  keyboardType: TextInputType.number),
-              _buildDropdownField('Major', majorsList, selectedMajor,
-                  (newValue) {
-                setState(() {
-                  selectedMajor = newValue;
-                  majorController.text = newValue ?? '';
-                });
-              }),
-              _buildSwitchField(
-                label: 'Enable Tutoring Profile',
-                value: isTutor,
-                onChanged: (val) {
-                  setState(() => isTutor = val);
-                  // Auto-scroll to tutor section when enabling
-                  if (val) {
-                    // Use Future.delayed to ensure the UI has updated before scrolling
-                    Future.delayed(const Duration(milliseconds: 100), () {
-                      _scrollToBottom();
-                    });
-                  }
-                },
+      data: (profile) {
+        if (!_initialized) {
+          nameController.text = profile.name;
+          ageController.text = profile.age?.toString() ?? '';
+          majorController.text = profile.major ?? '';
+          selectedMajor =
+              majorsList.contains(profile.major) ? profile.major : null;
+          isTutor = profile.isTutor ?? false;
+
+          if (profile.tutorProfile != null) {
+            bioController.text = profile.tutorProfile?.bio ?? '';
+            experienceController.text =
+                profile.tutorProfile?.yearsExperience?.toString() ?? '';
+            selectedSubjects =
+                profile.tutorProfile?.subjects?.toList() ?? [];
+            availableDays =
+                profile.tutorProfile?.availableDays?.toList() ?? [];
+            educationLevel = profile.tutorProfile?.educationLevel;
+          }
+
+          _initialized = true;
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            title: const Text('Profile'),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.arrow_upward),
+                onPressed: () => _scrollToPosition(0),
               ),
-              
-              // Conditional tutor fields - only shown when isTutor is true
-              if (isTutor) ...[
-                const Divider(thickness: 1),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    'Tutoring Information',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                
-                // Tutor Bio
-                _buildProfileField(
-                  'Bio (describe your tutoring approach)',
-                  bioController,
-                  maxLines: 3,
-                ),
-                
-                // Education Level
-                _buildDropdownField(
-                  'Education Level', 
-                  educationLevels, 
-                  educationLevel,
-                  (newValue) {
-                    setState(() {
-                      educationLevel = newValue;
-                    });
-                  }
-                ),
-                
-                // Tutoring Experience
-                _buildProfileField(
-                  'Years of Experience',
-                  experienceController,
-                  keyboardType: TextInputType.number,
-                ),
-                
-                // Subjects
-                _buildChipSelectionField(
-                  'Subjects I Can Tutor',
-                  subjectsList,
-                  selectedSubjects,
-                ),
-                
-                // Available Days
-                _buildCheckboxListField(
-                  'Available Days',
-                  daysOfWeek,
-                  availableDays,
-                ),
-              ],
-              
-              _buildReadOnlyField('Email', profile.email),
-              _buildReadOnlyField('School Domain', profile.schoolDomain),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveProfileChanges,
-                child: const Text('Save'),
-              ),
-              // Add extra space at bottom for better scrolling
-              const SizedBox(height: 30),
             ],
           ),
-        ),
-        // Add a floating action button ONLY when tutor mode is enabled
-        floatingActionButton: isTutor ? FloatingActionButton(
-          mini: true,
-          onPressed: _scrollToBottom,
-          child: const Icon(Icons.arrow_downward),
-          tooltip: 'Scroll to bottom',
-        ) : null,  // No FAB when tutor mode is disabled
-      ),
+          backgroundColor: Colors.white,
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                _buildProfileField('Name', nameController),
+                _buildProfileField('Age', ageController,
+                    keyboardType: TextInputType.number),
+                _buildDropdownField('Major', majorsList, selectedMajor,
+                    (newValue) {
+                  setState(() {
+                    selectedMajor = newValue;
+                    majorController.text = newValue ?? '';
+                  });
+                }),
+                _buildSwitchField(
+                  label: 'Enable Tutoring Profile',
+                  value: isTutor,
+                  onChanged: (val) {
+                    setState(() => isTutor = val);
+                    if (val) {
+                      Future.delayed(const Duration(milliseconds: 100),
+                          _scrollToBottom);
+                    }
+                  },
+                ),
+                if (isTutor) ...[
+                  const Divider(thickness: 1),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text(
+                      'Tutoring Information',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  _buildProfileField(
+                    'Bio (describe your tutoring approach)',
+                    bioController,
+                    maxLines: 3,
+                  ),
+                  _buildDropdownField('Education Level', educationLevels,
+                      educationLevel, (newValue) {
+                    setState(() => educationLevel = newValue);
+                  }),
+                  _buildProfileField(
+                    'Years of Experience',
+                    experienceController,
+                    keyboardType: TextInputType.number,
+                  ),
+                  _buildChipSelectionField('Subjects I Can Tutor',
+                      subjectsList, selectedSubjects),
+                  _buildCheckboxListField(
+                      'Available Days', daysOfWeek, availableDays),
+                ],
+                _buildReadOnlyField('Email', profile.email),
+                _buildReadOnlyField('School Domain', profile.schoolDomain),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _saveProfileChanges,
+                  child: const Text('Save'),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+          floatingActionButton: isTutor
+              ? FloatingActionButton(
+                  mini: true,
+                  onPressed: _scrollToBottom,
+                  child: const Icon(Icons.arrow_downward),
+                  tooltip: 'Scroll to bottom',
+                )
+              : null,
+        );
+      },
     );
   }
 
-  Widget _buildProfileField(
-    String label,
-    TextEditingController controller, {
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
+  Widget _buildProfileField(String label, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -324,10 +274,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             controller: controller,
             keyboardType: keyboardType,
             maxLines: maxLines,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               border: OutlineInputBorder(),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
           ),
         ],
@@ -348,12 +298,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             value: value,
             onChanged: onChanged,
             items: items
-                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                .map((item) =>
+                    DropdownMenuItem(value: item, child: Text(item)))
                 .toList(),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               border: OutlineInputBorder(),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
           ),
         ],
@@ -397,13 +348,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
   }
-  
-  // Widget for multi-select subjects using chips
-  Widget _buildChipSelectionField(
-    String label,
-    List<String> options,
-    List<String> selectedOptions,
-  ) {
+
+  Widget _buildChipSelectionField(String label, List<String> options,
+      List<String> selectedOptions) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -438,13 +385,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
   }
-  
-  // Widget for day selection using checkboxes
-  Widget _buildCheckboxListField(
-    String label,
-    List<String> options,
-    List<String> selectedOptions,
-  ) {
+
+  Widget _buildCheckboxListField(String label, List<String> options,
+      List<String> selectedOptions) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -465,9 +408,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onChanged: (selected) {
                     setState(() {
                       if (selected ?? false) {
-                        if (!selectedOptions.contains(option)) {
-                          selectedOptions.add(option);
-                        }
+                        selectedOptions.add(option);
                       } else {
                         selectedOptions.remove(option);
                       }
