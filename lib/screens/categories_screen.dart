@@ -233,7 +233,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
         children: [
           Container(
             decoration: const BoxDecoration(
-              image: DecorationImage(image: AssetImage('images/HomeScreen.png'), fit: BoxFit.cover),
+              image: DecorationImage(image: AssetImage('assets/HomeScreen.png'), fit: BoxFit.cover),
             ),
           ),
           if (_isMatching)
@@ -279,14 +279,35 @@ class CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  Widget buildCategorySection(String title, List<Map<String, dynamic>> items) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
-          const SizedBox(height: 15),
+Widget buildCategorySection(String title, List<Map<String, dynamic>> items) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 15),
+        if (title == "Trending")
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: items.map((item) {
+              return GestureDetector(
+                onTap: () => startMatching(item["displayName"]),
+                child: CategoryTile(
+                  title: item["displayName"],
+                  image: item["image"],
+                ),
+              );
+            }).toList(),
+          )
+        else
           SizedBox(
             height: 100,
             child: ListView.builder(
@@ -296,38 +317,65 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                 final item = items[i];
                 return GestureDetector(
                   onTap: () => startMatching(item["displayName"]),
-                  child: CategoryTile(title: item["displayName"], image: item["image"]),
+                  child: CategoryTile(
+                    title: item["displayName"],
+                    image: item["image"],
+                  ),
                 );
               },
             ),
           ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
-  Widget buildTutorMatchBox() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 300,
-            padding: const EdgeInsets.all(16),
-            color: const Color.fromARGB(111, 158, 158, 158),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text('Let’s find a match for you', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
-                Icon(Icons.arrow_forward_ios, size: 14, color: Colors.black),
-              ],
+Widget buildTutorMatchBox() {
+  return Column(
+    children: [
+      const Text(
+        'Tutors',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 300,
+              padding: const EdgeInsets.all(16),
+              color: const Color.fromARGB(111, 158, 158, 158),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Text(
+                    'Let’s find a match for you',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: Colors.black,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    );
-  }
+        ],
+      ),
+    ],
+  );
+}
 }
 
 class CategoryTile extends StatelessWidget {
