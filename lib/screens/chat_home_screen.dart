@@ -7,19 +7,18 @@ import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
 import 'package:gemo/screens/combined_chat_screen.dart';
 
+
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
-  const ChatHomeScreen({super.key});
 
   @override
-  ChatHomeScreenState createState() => ChatHomeScreenState();
+  _ChatHomeScreenState createState() => _ChatHomeScreenState();
 }
 
-class ChatHomeScreenState extends State<ChatHomeScreen> {
+class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions =
-      FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
   bool _isMatching = false;
   StreamSubscription<DocumentSnapshot>? _matchSubscription;
   String _currentCategory = 'General';
@@ -40,8 +39,8 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
 
   Future<void> _startVideoMatch(String category) async {
     setState(() {
-      _isMatching = true;
-      _currentCategory = category; // Set the current category
+    _isMatching = true;
+    _currentCategory = category; // Set the current category
     });
 
     try {
@@ -55,7 +54,6 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
         _listenForMatch();
       }
     } catch (e) {
-      if (!mounted) return;
       setState(() => _isMatching = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to start video chat: ${e.toString()}')),
@@ -67,8 +65,11 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    _matchSubscription =
-        _firestore.collection('rooms').doc(uid).snapshots().listen((doc) {
+    _matchSubscription = _firestore
+        .collection('rooms')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
       if (doc.exists && doc.data()?['status'] == 'matched') {
         _joinVideoRoom(doc.data()?['roomId']);
       }
@@ -76,18 +77,18 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
   }
 
   void _joinVideoRoom(String roomId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CombinedChatScreen(
-          chatId: roomId, // or generate a separate chat ID if needed
-          meetingId: roomId,
-          token: "my_token_here",
-          category: _currentCategory,
-        ),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => CombinedChatScreen(
+        chatId: roomId, // or generate a separate chat ID if needed
+        meetingId: roomId,
+        token: "my_token_here",
+        category: _currentCategory,
       ),
-    ).then((_) => setState(() => _isMatching = false));
-  }
+    ),
+  ).then((_) => setState(() => _isMatching = false));
+}
 
   Future<void> _cancelMatch() async {
     await _cleanupWaitingRoom();
@@ -134,11 +135,11 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _cancelMatch,
+                    child: Text('Cancel'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
-                    child: Text('Cancel'),
                   ),
                 ],
               ),
@@ -146,68 +147,68 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
           else
             Center(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Lets Chat!',
-                    style: TextStyle(
-                      color: Color(0xFF707070),
-                      fontSize: 62,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                    ),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Lets Chat!',
+                  style: TextStyle(
+                    color: Color(0xFF707070),
+                    fontSize: 62,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
                   ),
-                  SizedBox(height: 100),
-                  ElevatedButton(
-                    onPressed: () => _startVideoMatch('General'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF83B9FF),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 80, vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'New Chat',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: 200, // adjust this to control the width
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => CategoriesScreen()),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD3D3D3), // Light grey
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Browse Categories',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(height: 100),
+                ElevatedButton(
+  onPressed: () => _startVideoMatch('General'),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color(0xFF83B9FF),
+    padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 20),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ),
+  child: const Text(
+    'New Chat',
+    style: TextStyle(
+      color: Colors.black,
+      fontSize: 24,
+      fontFamily: 'Inter',
+      fontWeight: FontWeight.w700,
+    ),
+  ),
+),
+const SizedBox(height: 20),
+SizedBox(
+  width: 200, // adjust this to control the width
+  child: ElevatedButton(
+    onPressed: () => Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CategoriesScreen()),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFFD3D3D3), // Light grey
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    child: const Text(
+      'Browse Categories',
+      style: TextStyle(
+        color: Colors.black,
+        fontSize: 18,
+        fontFamily: 'Inter',
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ),
+),
+
+
+              ],
             ),
+          )
         ],
       ),
     );

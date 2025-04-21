@@ -58,44 +58,44 @@ class _MeetingScreenState extends State<MeetingScreen> {
   }
 
   void setMeetingEventListener() {
-    _room.on(Events.roomJoined, () {
-      setState(() {
-        participants[_room.localParticipant.id] = _room.localParticipant;
-      });
+  _room.on(Events.roomJoined, () {
+    setState(() {
+      participants[_room.localParticipant.id] = _room.localParticipant;
     });
+  });
 
-    _room.on(Events.participantJoined, (Participant participant) {
-      setState(() {
-        participants[participant.id] = participant;
-      });
+  _room.on(Events.participantJoined, (Participant participant) {
+    setState(() {
+      participants[participant.id] = participant;
     });
+  });
 
-    _room.on(Events.participantLeft, (String participantId) {
-      if (participants.containsKey(participantId)) {
-        setState(() {
-          participants.remove(participantId);
-        });
-      }
+  _room.on(Events.participantLeft, (String participantId) {
+  if (participants.containsKey(participantId)) {
+    setState(() {
+      participants.remove(participantId);
     });
-
-    _room.on(Events.roomLeft, () {
-      if (mounted) {
-        participants.clear();
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/home',
-          (Route<dynamic> route) => false,
-        );
-      }
-    });
-
-    // In MeetingScreen's setMeetingEventListener:
-_room.on(Events.roomLeft, (Map<String, dynamic> args) {
-  if (mounted) {
-    participants.clear();
-    Navigator.pop(context); // Just pop the current screen
+    
+    if (mounted) {
+      participants.clear();
+      _room.leave(); // Will trigger roomLeft
+      // Don't navigate here - let roomLeft handle it
+    }
   }
 });
+
+  _room.on(Events.roomLeft, () {
+  if (mounted) {
+    participants.clear();
+    if (Navigator.of(context).canPop()) {
+      Navigator.pop(context); // Return to previous screen
+    } else {
+      // Fallback if no previous screen exists
+      Navigator.pushReplacementNamed(context, '/home'); 
+    }
   }
+});
+}
 
   // Handle leaving the room when back button is pressed
   Future<bool> _onWillPop() async {
@@ -103,7 +103,7 @@ _room.on(Events.roomLeft, (Map<String, dynamic> args) {
     return true;
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
     final localParticipant = _room.localParticipant;
     final remoteParticipants = participants.values.where((p) => p.id != localParticipant.id).toList();
@@ -201,36 +201,34 @@ _room.on(Events.roomLeft, (Map<String, dynamic> args) {
   }
 
   Color _getCategoryColor(String categoryName) {
-  // This is a simplified version - you might want to fetch this from Firestore
-  // or pass it directly from the chat home screen
-  final categoryColors = {
-    'Music': Color(0xFF0080FF),
-    'Gaming': Color(0xFF008000),
-    'Movies': Color(0xFFff5733),
-    'Sports': Color(0xFFFFA500),
-    'Travel': Color(0xFFAC33FF),
-    'Fitness': Color(0xFFFFFF00),
-    'Fashion': Color(0xFFFE7AE2),
-    'Food': Color(0xFFFFC0CB),
-    'Photography': Color(0xFF00FFFF),
-    'Health': Color(0xFFFE5EE6),
-    'Business': Color(0xFF00FF00),
-    'Finance': Color(0xFFFFBF00),
-    'Electrical Engineering': Color(0xFFFF5454),
-    'Calculus': Color(0xFFFFBF00),
-    'Physics': Color(0xFF008080),
-    'Chemistry': Color(0xFFFFC0CB),
-    'Economics': Color(0xFF00FFFF),
-    'Psychology': Color(0xFFA254FF),
-    'History': Color(0xFFE7BB92),
-    'Computer Science': Color(0xFF0080FF),
-    'Mechanical Engineering': Color(0xFF008000),
-    'Civil Engineering': Color(0xFFFFA500),
-    'Chemical Engineering': Color(0xFF00FF00),
-    'Bio Engineering': Color(0xFFFFFF00),
-    'General': Color.fromARGB(255, 132, 132, 132),
-  };
-  
-  return categoryColors[categoryName] ?? Color.fromARGB(255, 132, 132, 132);
-}
+    final categoryColors = {
+      'Music': Color(0xFF0080FF),
+      'Gaming': Color(0xFF008000),
+      'Movies': Color(0xFFff5733),
+      'Sports': Color(0xFFFFA500),
+      'Travel': Color(0xFFAC33FF),
+      'Fitness': Color(0xFFFFFF00),
+      'Fashion': Color(0xFFFE7AE2),
+      'Food': Color(0xFFFFC0CB),
+      'Photography': Color(0xFF00FFFF),
+      'Health': Color(0xFFFE5EE6),
+      'Business': Color(0xFF00FF00),
+      'Finance': Color(0xFFFFBF00),
+      'Electrical Engineering': Color(0xFFFF5454),
+      'Calculus': Color(0xFFFFBF00),
+      'Physics': Color(0xFF008080),
+      'Chemistry': Color(0xFFFFC0CB),
+      'Economics': Color(0xFF00FFFF),
+      'Psychology': Color(0xFFA254FF),
+      'History': Color(0xFFE7BB92),
+      'Computer Science': Color(0xFF0080FF),
+      'Mechanical Engineering': Color(0xFF008000),
+      'Civil Engineering': Color(0xFFFFA500),
+      'Chemical Engineering': Color(0xFF00FF00),
+      'Bio Engineering': Color(0xFFFFFF00),
+      'General': Color.fromARGB(255, 132, 132, 132),
+    };
+    
+    return categoryColors[categoryName] ?? Color.fromARGB(255, 132, 132, 132);
+  }
 }

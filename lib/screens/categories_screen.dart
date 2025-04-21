@@ -28,6 +28,7 @@ Future<List<Category>> fetchCategories() async {
 }
 
 class CategoriesScreen extends StatefulWidget {
+  static const String routeName = '/category';
   const CategoriesScreen({super.key});
 
   @override
@@ -116,7 +117,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
         builder: (_) => CombinedChatScreen(
           chatId: roomId,
           meetingId: roomId,
-          token: "token-goes-here",
+          token: "my_token_here",
           category: _currentCategory,
         ),
       ),
