@@ -7,11 +7,17 @@ import './participant_tile.dart';
 class MeetingScreen extends StatefulWidget {
   final String meetingId;
   final String token;
+  final String category;
+  final void Function() onToggleChat;
+  final bool isChatOpen;
 
   const MeetingScreen({
     super.key,
     required this.meetingId,
     required this.token,
+    required this.category,
+    required this.onToggleChat,
+    required this.isChatOpen,
   });
 
   @override
@@ -81,6 +87,14 @@ class _MeetingScreenState extends State<MeetingScreen> {
         );
       }
     });
+
+    // In MeetingScreen's setMeetingEventListener:
+_room.on(Events.roomLeft, (Map<String, dynamic> args) {
+  if (mounted) {
+    participants.clear();
+    Navigator.pop(context); // Just pop the current screen
+  }
+});
   }
 
   // Handle leaving the room when back button is pressed
@@ -89,12 +103,9 @@ class _MeetingScreenState extends State<MeetingScreen> {
     return true;
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
-    // Get the local participant
     final localParticipant = _room.localParticipant;
-    
-    // Get the first remote participant (if available)
     final remoteParticipants = participants.values.where((p) => p.id != localParticipant.id).toList();
     final Participant? remoteParticipant = remoteParticipants.isNotEmpty ? remoteParticipants.first : null;
 
@@ -105,7 +116,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Stack(
             children: [
-              // Show remote participant in fullscreen if available
+              // Remote participant view
               if (remoteParticipant != null)
                 Positioned.fill(
                   child: ParticipantTile(
@@ -115,7 +126,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   ),
                 ),
 
-              // Local user's camera preview in the top-right corner
+              // Local participant preview
               Positioned(
                 top: 16,
                 right: 16,
@@ -130,22 +141,22 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 ),
               ),
 
-              // Meeting ID in the top-left corner
+              // Category label
               Positioned(
                 top: 16,
                 left: 16,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(128),
-                    borderRadius: BorderRadius.circular(8),
+                    color: _getCategoryColor(widget.category),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.videocam, color: Colors.white, size: 16),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.category, color: Colors.white, size: 16),
+                      const SizedBox(width: 6),
                       Text(
-                        'Meeting ID: ${widget.meetingId}',
+                        widget.category,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -157,7 +168,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 ),
               ),
 
-              // Meeting controls at the bottom
+              // Meeting controls
               Positioned(
                 bottom: 16,
                 left: 0,
@@ -178,6 +189,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   onLeaveButtonPressed: () {
                     _room.leave();
                   },
+                  onToggleChatButtonPressed: widget.onToggleChat,
+                  isChatOpen: widget.isChatOpen,
                 ),
               ),
             ],
@@ -186,4 +199,38 @@ class _MeetingScreenState extends State<MeetingScreen> {
       ),
     );
   }
+
+  Color _getCategoryColor(String categoryName) {
+  // This is a simplified version - you might want to fetch this from Firestore
+  // or pass it directly from the chat home screen
+  final categoryColors = {
+    'Music': Color(0xFF0080FF),
+    'Gaming': Color(0xFF008000),
+    'Movies': Color(0xFFff5733),
+    'Sports': Color(0xFFFFA500),
+    'Travel': Color(0xFFAC33FF),
+    'Fitness': Color(0xFFFFFF00),
+    'Fashion': Color(0xFFFE7AE2),
+    'Food': Color(0xFFFFC0CB),
+    'Photography': Color(0xFF00FFFF),
+    'Health': Color(0xFFFE5EE6),
+    'Business': Color(0xFF00FF00),
+    'Finance': Color(0xFFFFBF00),
+    'Electrical Engineering': Color(0xFFFF5454),
+    'Calculus': Color(0xFFFFBF00),
+    'Physics': Color(0xFF008080),
+    'Chemistry': Color(0xFFFFC0CB),
+    'Economics': Color(0xFF00FFFF),
+    'Psychology': Color(0xFFA254FF),
+    'History': Color(0xFFE7BB92),
+    'Computer Science': Color(0xFF0080FF),
+    'Mechanical Engineering': Color(0xFF008000),
+    'Civil Engineering': Color(0xFFFFA500),
+    'Chemical Engineering': Color(0xFF00FF00),
+    'Bio Engineering': Color(0xFFFFFF00),
+    'General': Color.fromARGB(255, 132, 132, 132),
+  };
+  
+  return categoryColors[categoryName] ?? Color.fromARGB(255, 132, 132, 132);
+}
 }

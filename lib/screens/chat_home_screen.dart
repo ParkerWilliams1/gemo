@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'package:logging/logging.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:gemo/screens/menu_screen.dart';
-import 'package:gemo/screens/text_chat_screen.dart';
-import 'package:gemo/screens/waiting_for_match_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
-import 'package:gemo/video_stream/join_screen.dart';
+import 'package:gemo/screens/combined_chat_screen.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
@@ -20,208 +18,85 @@ class ChatHomeScreen extends StatefulWidget {
 class ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String? _currentChatId;
-  bool _waitingForMatch = false;
-  StreamSubscription<DocumentSnapshot>? _chatSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _resetChatOnStartup();
-  }
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'us-central1');
+  bool _isMatching = false;
+  StreamSubscription<DocumentSnapshot>? _matchSubscription;
+  String _currentCategory = 'General';
 
   @override
   void dispose() {
-    _chatSubscription?.cancel();
+    _matchSubscription?.cancel();
+    _cleanupWaitingRoom();
     super.dispose();
   }
 
-  void _resetChatOnStartup() async {
-    User? currentUser = _auth.currentUser;
-    if (currentUser == null) return;
-
-    DocumentReference currentUserRef =
-        _firestore.collection('users').doc(currentUser.uid);
-    DocumentReference queueRef =
-        _firestore.collection('chat_queue').doc(currentUser.uid);
-
-    await queueRef.delete().catchError((e) {
-      Logger("ℹ️ No existing queue entry for cleanup.");
-    });
-
-    await _firestore.runTransaction((transaction) async {
-      DocumentSnapshot queueSnapshot = await transaction.get(queueRef);
-      if (queueSnapshot.exists && queueSnapshot['uid'] == currentUser.uid) {
-        transaction.delete(queueRef);
-        Logger("🗑 Removed stale queue entry for user ${currentUser.uid}");
-      }
-    });
-
-    await currentUserRef.update({
-      "currentChat": null,
-      "matchable": true,
-    });
-
-    Logger("🔄 Reset chat state on app start.");
-  }
-
-  Future<void> matchUsers(String user1Uid, String user2Uid,
-      DocumentReference queueRef, DocumentReference user1Ref) async {
-    DocumentReference user2Ref = _firestore.collection('users').doc(user2Uid);
-    DocumentSnapshot user2Doc = await user2Ref.get();
-
-    if (!user2Doc.exists ||
-        user2Doc['matchable'] == false ||
-        user2Doc['currentChat'] != null) {
-      Logger("🚨 User $user2Uid is no longer available for matching. Removing from queue...");
-      await queueRef.delete();
-      return;
+  Future<void> _cleanupWaitingRoom() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      await _firestore.collection('rooms').doc(uid).delete();
     }
-
-    var newChatRef = _firestore.collection('chats').doc();
-    await newChatRef.set({
-      "participants": [user1Uid, user2Uid],
-      "createdAt": FieldValue.serverTimestamp(),
-      "chatStatus": "active"
-    });
-
-    Logger("✅ New chat created: ${newChatRef.id}");
-
-    await user1Ref.update({"currentChat": newChatRef.id, "matchable": false});
-    await user2Ref.update({"currentChat": newChatRef.id, "matchable": false});
-
-    await queueRef.delete();
   }
 
-  Future<void> startNewChatSafely() async {
+  Future<void> _startVideoMatch(String category) async {
     setState(() {
-      _waitingForMatch = true;
+      _isMatching = true;
+      _currentCategory = category; // Set the current category
     });
 
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      Logger("🚨 ERROR: No user is logged in.");
-      return;
-    }
-
-    final String currentUid = currentUser.uid;
-    final userRef = _firestore.collection('users').doc(currentUid);
-    final queueRef = _firestore.collection('chat_queue').doc(currentUid);
-
     try {
-      await queueRef.delete();
-      Logger("🧹 Cleared old queue entry for $currentUid.");
-    } catch (e) {
-      Logger("ℹ️ No previous queue entry to delete for $currentUid.");
-    }
+      final result = await _functions
+          .httpsCallable('matchUser')
+          .call({'category': category});
 
-    try {
-      final snapshot = await _firestore
-          .collection('chat_queue')
-          .where('uid', isNotEqualTo: currentUid)
-          .orderBy('timestamp')
-          .limit(1)
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        final matchedDoc = snapshot.docs.first;
-        final matchedData = matchedDoc.data() as Map<String, dynamic>?;
-
-        if (matchedData == null ||
-            matchedData['uid'] == null ||
-            matchedData['uid'].toString().isEmpty) {
-          Logger("❌ ERROR: Matched document missing 'uid' field.");
-          return;
-        }
-
-        final String matchedUid = matchedData['uid'];
-        Logger("🎯 Match found! Matched with user $matchedUid");
-
-        final matchedUserRef = _firestore.collection('users').doc(matchedUid);
-        final matchedQueueRef =
-            _firestore.collection('chat_queue').doc(matchedUid);
-
-        final newChatRef = _firestore.collection('chats').doc();
-        await newChatRef.set({
-          'participants': [currentUid, matchedUid],
-          'createdAt': FieldValue.serverTimestamp(),
-          'chatStatus': 'active',
-        });
-
-        await userRef.update({'currentChat': newChatRef.id, 'matchable': false});
-        await matchedUserRef.update({'currentChat': newChatRef.id, 'matchable': false});
-
-        await queueRef.delete();
-        await matchedQueueRef.delete();
-
-        Logger("✅ Chat created between $currentUid and $matchedUid. Chat ID: ${newChatRef.id}");
-
-        _listenForChatUpdates();
+      if (result.data['isNewMatch'] == true) {
+        _joinVideoRoom(result.data['roomId']);
       } else {
-        Logger("📥 No match found. Adding $currentUid to queue...");
-
-        try {
-          await queueRef.set({
-            'uid': currentUid,
-            'timestamp': FieldValue.serverTimestamp(),
-            'category': 'General',
-          });
-          Logger("✅ Successfully added $currentUid to chat_queue.");
-        } catch (e) {
-          Logger("🚨 Failed to add user to chat_queue: $e");
-        }
-
-        Logger("✅ User $currentUid added to chat_queue.");
-        _listenForChatUpdates();
+        _listenForMatch();
       }
     } catch (e) {
-      Logger("🚨 Firestore error during matchmaking: $e");
+      if (!mounted) return;
+      setState(() => _isMatching = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to start video chat: ${e.toString()}')),
+      );
     }
   }
 
-  void _navigateToChatScreen(String chatId) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => ChatScreen(chatId: chatId)),
-    );
-  }
+  void _listenForMatch() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
 
-  void _listenForChatUpdates() {
-    User? currentUser = _auth.currentUser;
-    if (currentUser == null) return;
-
-    _chatSubscription = _firestore
-        .collection('users')
-        .doc(currentUser.uid)
-        .snapshots()
-        .listen((doc) {
-      if (!mounted) return;
-
-      if (doc.exists) {
-        String? chatId = doc.data()?['currentChat'];
-
-        if (chatId != null && chatId.isNotEmpty && chatId != _currentChatId) {
-          setState(() {
-            _currentChatId = chatId;
-            _waitingForMatch = false;
-          });
-          _navigateToChatScreen(chatId);
-        }
+    _matchSubscription =
+        _firestore.collection('rooms').doc(uid).snapshots().listen((doc) {
+      if (doc.exists && doc.data()?['status'] == 'matched') {
+        _joinVideoRoom(doc.data()?['roomId']);
       }
     });
+  }
+
+  void _joinVideoRoom(String roomId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CombinedChatScreen(
+          chatId: roomId, // or generate a separate chat ID if needed
+          meetingId: roomId,
+          token: "my_token_here",
+          category: _currentCategory,
+        ),
+      ),
+    ).then((_) => setState(() => _isMatching = false));
+  }
+
+  Future<void> _cancelMatch() async {
+    await _cleanupWaitingRoom();
+    _matchSubscription?.cancel();
+    setState(() => _isMatching = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_waitingForMatch) {
-      return WaitingForMatchScreen(
-        category: 'General',
-        onCancel: () {
-          setState(() => _waitingForMatch = false);
-        },
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -230,12 +105,10 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.menu, color: Colors.black),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MenuScreen()),
-              );
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MenuScreen()),
+            ),
           ),
         ],
       ),
@@ -250,109 +123,91 @@ class ChatHomeScreenState extends State<ChatHomeScreen> {
               ),
             ),
           ),
-          const Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: EdgeInsets.only(top: 290),
-              child: Text(
-                'Lets Chat!',
-                style: TextStyle(
-                  color: Color(0xFF707070),
-                  fontSize: 62,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                ),
+          if (_isMatching)
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('Finding your match...', style: TextStyle(fontSize: 18)),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _cancelMatch,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('Cancel'),
+                  ),
+                ],
               ),
-            ),
-          ),
-          Positioned(
-            left: 78,
-            top: 405,
-            child: GestureDetector(
-              onTap: startNewChatSafely,
-              child: Container(
-                width: 247,
-                height: 91,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF83B9FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'New Chat',
+            )
+          else
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Lets Chat!',
                     style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
+                      color: Color(0xFF707070),
+                      fontSize: 62,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 78,
-            top: 510,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => JoinScreen()),
-                );
-              },
-              child: Container(
-                width: 247,
-                height: 55,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA5D6A7),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Video Chat',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
+                  SizedBox(height: 100),
+                  ElevatedButton(
+                    onPressed: () => _startVideoMatch('General'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF83B9FF),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 80, vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'New Chat',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 24,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 120,
-            top: 580,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CategoriesScreen()),
-                );
-              },
-              child: Container(
-                width: 180,
-                height: 55,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Browse Categories',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: 200, // adjust this to control the width
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CategoriesScreen()),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD3D3D3), // Light grey
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Browse Categories',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
-          ),
         ],
       ),
     );
