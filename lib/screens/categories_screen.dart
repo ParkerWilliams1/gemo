@@ -241,8 +241,8 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _cancelMatch,
-                    child: const Text('Cancel'),
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                    child: const Text('Cancel'),
                   ),
                 ],
               ),

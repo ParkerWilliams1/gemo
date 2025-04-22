@@ -9,12 +9,13 @@ import 'package:gemo/screens/combined_chat_screen.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
+  const ChatHomeScreen({super.key});
 
   @override
-  _ChatHomeScreenState createState() => _ChatHomeScreenState();
+  ChatHomeScreenState createState() => ChatHomeScreenState();
 }
 
-class _ChatHomeScreenState extends State<ChatHomeScreen> {
+class ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
@@ -66,6 +67,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       }
     } catch (e) {
       setState(() => _isMatching = false);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to start video chat: ${e.toString()}')),
       );
@@ -143,11 +145,11 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _cancelMatch,
-                    child: Text('Cancel'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
+                    child: Text('Cancel'),
                   ),
                 ],
               ),

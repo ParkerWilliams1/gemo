@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logging/logging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +59,7 @@ class ReportingSystem {
       await _firestore.collection('reports').add(reportData);
       return true;
     } catch (e) {
-      print('Error submitting report: $e');
+      Logger('Error submitting report: $e');
       return false;
     }
   }
@@ -77,10 +78,10 @@ class ReportForm extends StatefulWidget {
   });
 
   @override
-  _ReportFormState createState() => _ReportFormState();
+  ReportFormState createState() => ReportFormState();
 }
 
-class _ReportFormState extends State<ReportForm> {
+class ReportFormState extends State<ReportForm> {
   String? _selectedCategory;
   final TextEditingController _descriptionController = TextEditingController();
   bool _isSubmitting = false;
@@ -126,7 +127,8 @@ class _ReportFormState extends State<ReportForm> {
 
     final bool success = await widget.onSubmit(reportData);
 
-    setState(() {
+    if (mounted) {
+      setState(() {
       _isSubmitting = false;
     });
 
@@ -141,6 +143,7 @@ class _ReportFormState extends State<ReportForm> {
       );
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:logging/logging.dart';
 import 'chat_home_screen.dart';
 import 'report_screen.dart'; 
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
 
-  ChatScreen({required this.chatId});
+  const ChatScreen({super.key, required this.chatId});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -85,9 +85,9 @@ class _ChatScreenState extends State<ChatScreen> {
         "timestamp": FieldValue.serverTimestamp(),
       });
 
-      print("Message sent: $messageText");
+      Logger("Message sent: $messageText");
     } catch (e) {
-      print("Error sending message: $e");
+      Logger("Error sending message: $e");
     }
 
     _messageController.clear();
@@ -97,7 +97,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _leaveChat() async {
     User? user = _auth.currentUser;
     if (user == null) {
-      print("🚨 No authenticated user found.");
+      Logger("🚨 No authenticated user found.");
       return;
     }
 
@@ -105,7 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
     DocumentSnapshot userDoc = await userRef.get();
 
     if (!userDoc.exists) {
-      print("🚨 Current user document not found in Firestore.");
+      Logger("🚨 Current user document not found in Firestore.");
       return;
     }
 
@@ -114,7 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
     DocumentSnapshot chatDoc = await chatRef.get();
 
     if (!chatDoc.exists) {
-      print("🚨 Chat document not found in Firestore.");
+      Logger("🚨 Chat document not found in Firestore.");
       return;
     }
 
@@ -128,7 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
       "matchable": true,
     });
 
-    print("✅ Current user ${user.uid} is now matchable again.");
+    Logger("✅ Current user ${user.uid} is now matchable again.");
 
     // If there's another participant, reset their status too
     if (otherUserUid != null) {
@@ -138,7 +138,7 @@ class _ChatScreenState extends State<ChatScreen> {
         "currentChat": null,
         "matchable": true,
       });
-      print("✅ Other user ($otherUserUid) is now matchable again.");
+      Logger("✅ Other user ($otherUserUid) is now matchable again.");
     }
 
     // Remove user from chat participants
@@ -146,14 +146,16 @@ class _ChatScreenState extends State<ChatScreen> {
       "participants": FieldValue.arrayRemove([user.uid]),
     });
 
-    print("✅ User ${user.uid} left the chat.");
+    Logger("✅ User ${user.uid} left the chat.");
 
     // Navigate back to ChatHomeScreen
+  if (mounted) {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ChatHomeScreen()),
     );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +260,7 @@ class ChatBubble extends StatelessWidget {
   final String text;
   final bool isMe;
 
-  ChatBubble({required this.text, required this.isMe});
+  const ChatBubble({super.key, required this.text, required this.isMe});
 
   @override
   Widget build(BuildContext context) {

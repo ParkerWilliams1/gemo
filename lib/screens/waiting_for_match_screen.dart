@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gemo/screens/text_chat_screen.dart';
+import 'package:logging/logging.dart';
 
 class WaitingForMatchScreen extends StatefulWidget {
   final String category;
@@ -82,9 +83,9 @@ class _WaitingForMatchScreenState extends State<WaitingForMatchScreen> {
         'currentChat': null,
         'matchable': true,
       });
-      print("🔙 User $uid canceled matchmaking and removed from queue.");
+      Logger("🔙 User $uid canceled matchmaking and removed from queue.");
     } catch (e) {
-      print("⚠️ Error removing user from queue: $e");
+      Logger("⚠️ Error removing user from queue: $e");
     }
 
     _userSubscription?.cancel();

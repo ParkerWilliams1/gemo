@@ -11,10 +11,10 @@ class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  SignUpScreenState createState() => SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -44,7 +44,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await userCredential.user?.sendEmailVerification();
 
       final uid = userCredential.user?.uid;
-      if (uid != null && context.mounted) {
+      if (uid != null && mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -53,8 +53,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message ?? "Error occurred")));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "Error occurred")),
+        );
+      }
     }
   }
 }
@@ -89,7 +92,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withAlpha(64),
                     blurRadius: 4,
                     offset: const Offset(0, 4),
                   )

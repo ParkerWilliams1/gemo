@@ -9,7 +9,11 @@ lib/firebase_options.dart
 # Build + Platform folders
 build/
 android/
+!android/app/src/main/res/
+
 ios/
+!ios/Assets.xcassets/
+
 linux/
 web/
 macos/

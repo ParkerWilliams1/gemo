@@ -11,10 +11,10 @@ class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
   @override
-  _SignInScreenState createState() => _SignInScreenState();
+  SignInScreenState createState() => SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -26,7 +26,8 @@ class _SignInScreenState extends State<SignInScreen> {
     if (email.isNotEmpty && password.isNotEmpty) {
       String? error = await _authService.signIn(email, password);
 
-      if (error != null && mounted) {
+    if (mounted) {
+      if (error != null) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(error)));
       } else {
@@ -35,11 +36,11 @@ class _SignInScreenState extends State<SignInScreen> {
           context,
           MaterialPageRoute(builder: (context) => ChatHomeScreen()),
           (route) => false,
-        ); // Remove all previous routes -> fixed bug where back button stayed on screen
+        );
       }
     }
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

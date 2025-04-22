@@ -252,8 +252,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ? FloatingActionButton(
                   mini: true,
                   onPressed: _scrollToBottom,
-                  child: const Icon(Icons.arrow_downward),
                   tooltip: 'Scroll to bottom',
+                  child: const Icon(Icons.arrow_downward),
                 )
               : null,
         );
