@@ -13,7 +13,7 @@ class MatchService {
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
   
   // VideoSDK Token
-  static const String _videoChatToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJiYmQ0MDc3NC01ZGJjLTQ0NDctOWNjOS0yNWFmYmIxOWRhYWMiLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc0NTIyNDI1NiwiZXhwIjoxNzQ1ODI5MDU2fQ.2svFCrnP_xlepvM7VVtgb4xEkJMRG-QL4HRQ1B7lvcM";
+  static const String _videoChatToken = "token_goes_here";
   
   StreamSubscription<DocumentSnapshot>? _matchSubscription;
   String _currentCategory = 'General';
