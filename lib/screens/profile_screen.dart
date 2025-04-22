@@ -1,20 +1,20 @@
 /*
-  profile_screen.dart
-  April 1, 2025
-  Grace Bergquist
-  Allows users to view and edit their profile based on the UserProfile model.
+    profile_screen.dart
+    April 1, 2025
+    Grace Bergquist
+    Allows users to view and edit their profile based on the UserProfile model.
 
-  Editable: name, age, major, isTutor
-  Read-only: email, school domain
+    Editable: name, age, major, isTutor
+    Read-only: email, school domain
 
-  Uses: Riverpod UserProfileNotifier for Firestore sync
+    Uses: Riverpod UserProfileNotifier for Firestore sync
 */
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemo/providers/user_profile_provider.dart';
-// import '../providers/user_profile_notifier.dart';
+import '../providers/user_profile_notifier.dart';
 import 'package:gemo/constants/majors.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -252,8 +252,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ? FloatingActionButton(
                   mini: true,
                   onPressed: _scrollToBottom,
-                  tooltip: 'Scroll to bottom',
                   child: const Icon(Icons.arrow_downward),
+                  tooltip: 'Scroll to bottom',
                 )
               : null,
         );
@@ -312,11 +312,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildSwitchField({
-    required String label,
-    required bool value,
-    required void Function(bool) onChanged,
-  }) {
+  Widget _buildSwitchField(
+      {required String label,
+      required bool value,
+      required void Function(bool) onChanged}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Row(

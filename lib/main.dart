@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gemo/screens/categories_screen.dart';
 
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChatHomeScreen.routeName: (context) => ChatHomeScreen(),
         SignInScreen.routeName: (context) => const SignInScreen(),
         SignUpScreen.routeName: (context) => const SignUpScreen(),
+        CategoriesScreen.routeName: (context) => const CategoriesScreen(),
       },
     );
   }
