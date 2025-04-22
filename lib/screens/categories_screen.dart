@@ -1,15 +1,10 @@
-// Merged CategoriesScreen with full functionality + image-based tiles
-
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gemo/screens/menu_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:gemo/screens/combined_chat_screen.dart';
+import 'package:gemo/services/match_service.dart';
 
 class Category {
   String name;
@@ -37,11 +32,7 @@ class CategoriesScreen extends StatefulWidget {
 
 class CategoriesScreenState extends State<CategoriesScreen> {
   bool _isMatching = false;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
-  StreamSubscription<DocumentSnapshot>? _matchSubscription;
-  String _currentCategory = 'General';
+  final MatchService _matchService = MatchService();
 
   List<Map<String, dynamic>> categories = [
       // Interests
@@ -81,47 +72,22 @@ class CategoriesScreenState extends State<CategoriesScreen> {
 
   @override
   void dispose() {
-    _matchSubscription?.cancel();
-    _cleanupWaitingRoom();
+    _matchService.dispose();
     super.dispose();
   }
 
-  Future<void> _cleanupWaitingRoom() async {
-    final uid = _auth.currentUser?.uid;
-    if (uid != null) {
-      await _firestore.collection('rooms').doc(uid).delete();
-    }
-  }
-
   Future<void> _cancelMatch() async {
-    await _cleanupWaitingRoom();
-    _matchSubscription?.cancel();
+    await _matchService.cancelMatch();
     setState(() => _isMatching = false);
   }
 
-  void _listenForMatch() {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-
-    _matchSubscription = _firestore.collection('rooms').doc(uid).snapshots().listen((doc) {
-      if (doc.exists && doc.data()?['status'] == 'matched') {
-        _joinVideoRoom(doc.data()?['roomId']);
-      }
-    });
-  }
-
   void _joinVideoRoom(String roomId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CombinedChatScreen(
-          chatId: roomId,
-          meetingId: roomId,
-          token: "my_token_here",
-          category: _currentCategory,
-        ),
-      ),
-    ).then((_) => setState(() => _isMatching = false));
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => MatchService().createChatScreen(roomId),
+    ),
+  ).then((_) => setState(() => _isMatching = false));
   }
 
   Future<void> updateCategoryClicks() async {
@@ -171,45 +137,20 @@ class CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   void startMatching(String category) async {
-    setState(() {
-      _isMatching = true;
-      _currentCategory = category;
-    });
-
-    try {
-      final snap = await _firestore
-          .collection('categories')
-          .where('displayName', isEqualTo: category)
-          .limit(1)
-          .get();
-
-      if (snap.docs.isNotEmpty) {
-        await _firestore.collection('categories').doc(snap.docs.first.id).update({"clicks": FieldValue.increment(1)});
-      }
-
-      final result = await _functions.httpsCallable('matchUser').call({'category': category});
-
-      if (result.data['isNewMatch'] == true) {
-        _joinVideoRoom(result.data['roomId']);
-      } else {
-        _listenForMatch();
-      }
-
-      setState(() {
-        final index = categories.indexWhere((c) => c["displayName"] == category);
-        if (index != -1) {
-          categories[index]["clicks"] += 1;
+    _matchService.startMatch(
+      category: category,
+      context: context,
+      onMatchStarted: () => setState(() => _isMatching = true),
+      onMatchFound: (roomId) => _joinVideoRoom(roomId),
+      onError: (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+          setState(() => _isMatching = false);
         }
-      });
-    } catch (e) {
-      Logger("Matching error: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start match: ${e.toString()}')),
-        );
-      }
-      setState(() => _isMatching = false);
-    }
+      },
+    );
   }
 
   @override

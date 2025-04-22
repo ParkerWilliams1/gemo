@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
-import 'package:gemo/screens/combined_chat_screen.dart';
-
+import 'package:gemo/services/match_service.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
@@ -16,83 +12,41 @@ class ChatHomeScreen extends StatefulWidget {
 }
 
 class _ChatHomeScreenState extends State<ChatHomeScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
   bool _isMatching = false;
-  StreamSubscription<DocumentSnapshot>? _matchSubscription;
-  String _currentCategory = 'General';
+  final MatchService _matchService = MatchService();
 
   @override
   void dispose() {
-    _matchSubscription?.cancel();
-    _cleanupWaitingRoom();
+    _matchService.dispose();
     super.dispose();
   }
 
-  Future<void> _cleanupWaitingRoom() async {
-    final uid = _auth.currentUser?.uid;
-    if (uid != null) {
-      await _firestore.collection('rooms').doc(uid).delete();
-    }
-  }
-
   Future<void> _startVideoMatch(String category) async {
-    setState(() {
-    _isMatching = true;
-    _currentCategory = category; // Set the current category
-    });
-
-    try {
-      final result = await _functions
-          .httpsCallable('matchUser')
-          .call({'category': category});
-
-      if (result.data['isNewMatch'] == true) {
-        _joinVideoRoom(result.data['roomId']);
-      } else {
-        _listenForMatch();
-      }
-    } catch (e) {
-      setState(() => _isMatching = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to start video chat: ${e.toString()}')),
-      );
-    }
-  }
-
-  void _listenForMatch() {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-
-    _matchSubscription = _firestore
-        .collection('rooms')
-        .doc(uid)
-        .snapshots()
-        .listen((doc) {
-      if (doc.exists && doc.data()?['status'] == 'matched') {
-        _joinVideoRoom(doc.data()?['roomId']);
-      }
-    });
+    _matchService.startMatch(
+      category: category,
+      context: context,
+      onMatchStarted: () => setState(() => _isMatching = true),
+      onMatchFound: (roomId) => _joinVideoRoom(roomId),
+      onError: (error) {
+        setState(() => _isMatching = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+      },
+    );
   }
 
   void _joinVideoRoom(String roomId) {
   Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (context) => CombinedChatScreen(
-        chatId: roomId, // or generate a separate chat ID if needed
-        meetingId: roomId,
-        token: "my_token_here",
-        category: _currentCategory,
-      ),
+      builder: (_) => MatchService().createChatScreen(roomId),
     ),
   ).then((_) => setState(() => _isMatching = false));
 }
 
   Future<void> _cancelMatch() async {
-    await _cleanupWaitingRoom();
-    _matchSubscription?.cancel();
+    await _matchService.cancelMatch();
     setState(() => _isMatching = false);
   }
 
@@ -204,7 +158,6 @@ SizedBox(
     ),
   ),
 ),
-
 
               ],
             ),
