@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemo/video_stream/meeting_screen.dart';
-import 'package:logging/logging.dart';
 
 class CombinedChatScreen extends StatefulWidget {
   final String chatId;
@@ -11,18 +10,18 @@ class CombinedChatScreen extends StatefulWidget {
   final String category;
 
   const CombinedChatScreen({
-    super.key,
+    Key? key,
     required this.chatId,
     required this.meetingId,
     required this.token,
     required this.category,
-  });
+  }) : super(key: key);
 
   @override
-  CombinedChatScreenState createState() => CombinedChatScreenState();
+  _CombinedChatScreenState createState() => _CombinedChatScreenState();
 }
 
-class CombinedChatScreenState extends State<CombinedChatScreen> {
+class _CombinedChatScreenState extends State<CombinedChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -44,7 +43,7 @@ class CombinedChatScreenState extends State<CombinedChatScreen> {
       }
       return uid; // Fallback to UID if user not found
     } catch (e) {
-      Logger("Error fetching user email: $e");
+      print("Error fetching user email: $e");
       return uid; // Fallback to UID on error
     }
   }
@@ -86,7 +85,7 @@ class CombinedChatScreenState extends State<CombinedChatScreen> {
         );
       });
     } catch (e) {
-      Logger("Error sending message: $e");
+      print("Error sending message: $e");
     }
 
     _messageController.clear();
@@ -123,7 +122,7 @@ class CombinedChatScreenState extends State<CombinedChatScreen> {
               alignment: Alignment.bottomCenter,
               child: Padding(
                 padding: EdgeInsets.only(bottom: 120), // Space for controls
-                child: SizedBox(
+                child: Container(
                   width: MediaQuery.of(context).size.width * 0.9,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -133,7 +132,7 @@ class CombinedChatScreenState extends State<CombinedChatScreen> {
                         constraints: BoxConstraints(maxHeight: 150),
                         padding: EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(25),
+                          color: Colors.black.withOpacity(0.1),
                           borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                         ),
                         child: StreamBuilder<QuerySnapshot>(
@@ -203,7 +202,7 @@ class CombinedChatScreenState extends State<CombinedChatScreen> {
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(25),
+                            color: Colors.black.withOpacity(0.1),
                             borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
                           ),
                           child: Row(
