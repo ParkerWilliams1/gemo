@@ -1,10 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gemo/screens/my_chats_screen.dart'; // Import MyChatsScreen
 import 'package:gemo/screens/profile_screen.dart'; // Import ProfileScreen
-import 'package:gemo/screens/settings_screen.dart'; // Import SettingsScreen
-import 'package:logging/logging.dart'; // Import Logger
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -41,23 +38,10 @@ class MenuScreen extends StatelessWidget {
           children: <Widget>[
             const SizedBox(height: 40),
             _buildMenuButton(
-              icon: Icons.groups_outlined,
-              label: 'My Chats',
-              onPressed: () {
-                Logger("Navigating to My Chats...");
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MyChatsScreen()),
-                );
-              },
-            ),
-            const SizedBox(height: 40),
-            _buildMenuButton(
               icon: Icons.person_outline_outlined,
               label: 'Profile',
               onPressed: () {
-                Logger("Navigating to Profile...");
+                print("Navigating to Profile...");
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -68,25 +52,12 @@ class MenuScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             _buildMenuButton(
-              icon: Icons.settings_outlined,
-              label: 'Settings',
-              onPressed: () {
-                Logger("Navigating to Settings...");
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SettingsScreen()),
-                );
-              },
-            ),
-            const SizedBox(height: 40),
-            _buildMenuButton(
               icon: Icons.logout,
               label: 'Logout',
               onPressed: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushReplacementNamed(
-                    context, '/signin'); // Make sure your route is defined
+                    context, '/signin'); // Ensure this route exists
               },
             ),
           ],

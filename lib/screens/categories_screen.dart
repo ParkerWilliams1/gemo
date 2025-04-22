@@ -5,6 +5,7 @@ import 'package:gemo/screens/menu_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 import 'package:gemo/services/match_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Category {
   String name;
@@ -105,6 +106,23 @@ class CategoriesScreenState extends State<CategoriesScreen> {
       Logger("Error updating category clicks: $e");
     }
   }
+
+  Future<String?> _getUserMajor() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+    
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    
+    return doc.data()?['major'] as String?;
+  } catch (e) {
+    Logger("Error fetching user major: $e");
+    return null;
+  }
+}
 
   Future<List<Map<String, dynamic>>> get trendingCategories async {
     try {
@@ -287,29 +305,41 @@ Widget buildTutorMatchBox() {
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 300,
-              padding: const EdgeInsets.all(16),
-              color: const Color.fromARGB(111, 158, 158, 158),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    'Let’s find a match for you',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+          GestureDetector(
+            onTap: () async {
+              final major = await _getUserMajor();
+              if (major != null) {
+                startMatching(major);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Could not determine your major')),
+                );
+              }
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 300,
+                padding: const EdgeInsets.all(16),
+                color: const Color.fromARGB(111, 158, 158, 158),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text(
+                      'Let\'s find a match for you',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
                       color: Colors.black,
                     ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: Colors.black,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
