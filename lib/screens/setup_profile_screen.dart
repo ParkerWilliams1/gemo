@@ -138,7 +138,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         ),
                         Switch(
                           value: _isTutor,
-                          onChanged: (val) => setState(() => _isTutor = val),
+                          onChanged: (val) =>
+                              setState(() => _isTutor = val),
                         ),
                       ],
                     ),
