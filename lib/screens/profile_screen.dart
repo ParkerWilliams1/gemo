@@ -1,21 +1,21 @@
 /*
-    profile_screen.dart
-    April 1, 2025
-    Grace Bergquist
-    Allows users to view and edit their profile based on the UserProfile model.
+  profile_screen.dart
+  April 1, 2025
+  Grace Bergquist
+  Allows users to view and edit their profile based on the UserProfile model.
 
-    Editable: name, age, major, isTutor
-    Read-only: email, school domain
+  Editable: name, age, major, isTutor
+  Read-only: email, school domain
 
-    Uses: Riverpod UserProfileNotifier for Firestore sync
+  Uses: Riverpod UserProfileNotifier for Firestore sync
 */
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemo/providers/user_profile_provider.dart';
-import '../providers/user_profile_notifier.dart';
 import 'package:gemo/constants/majors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   static const routeName = '/profile';
@@ -106,7 +106,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _saveProfileChanges() async {
+  Future<void> _saveProfileChanges(String uid) async {
     Map<String, dynamic>? tutorProfileData;
 
     if (isTutor) {
@@ -119,7 +119,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       };
     }
 
-    await ref.read(userProfileNotifierProvider.notifier).updateProfile(
+    await ref.read(userProfileNotifierProvider(uid).notifier).updateProfile(
           name: nameController.text.trim(),
           age: int.tryParse(ageController.text.trim()),
           major: selectedMajor,
@@ -136,7 +136,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profileAsync = ref.watch(userProfileNotifierProvider);
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final uid = currentUser?.uid;
+
+    if (uid == null) {
+      return const Scaffold(
+        body: Center(child: Text("No user is logged in.")),
+      );
+    }
+
+    final profileAsync = ref.watch(userProfileNotifierProvider(uid));
 
     return profileAsync.when(
       loading: () => const Scaffold(
@@ -241,7 +250,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _buildReadOnlyField('School Domain', profile.schoolDomain),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _saveProfileChanges,
+                  onPressed: () => _saveProfileChanges(uid),
                   child: const Text('Save'),
                 ),
                 const SizedBox(height: 30),
@@ -312,10 +321,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildSwitchField(
-      {required String label,
-      required bool value,
-      required void Function(bool) onChanged}) {
+  Widget _buildSwitchField({
+    required String label,
+    required bool value,
+    required void Function(bool) onChanged,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Row(
@@ -349,8 +359,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildChipSelectionField(String label, List<String> options,
-      List<String> selectedOptions) {
+  Widget _buildChipSelectionField(
+      String label, List<String> options, List<String> selectedOptions) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -386,8 +396,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildCheckboxListField(String label, List<String> options,
-      List<String> selectedOptions) {
+  Widget _buildCheckboxListField(
+      String label, List<String> options, List<String> selectedOptions) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(

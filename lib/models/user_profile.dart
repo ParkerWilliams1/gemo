@@ -20,7 +20,7 @@ class UserProfile {
     required this.schoolDomain,
     required this.createdAt,
     required this.major,
-    required this.isTutor,
+    required this.isTutor, Map<String, dynamic>? tutorProfile,
   });
 
   Map<String, dynamic> toMap() {

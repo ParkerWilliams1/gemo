@@ -1,22 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_profile.dart';
 
 class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
-  UserProfileNotifier() : super(const AsyncLoading()) {
+  final String uid;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  UserProfileNotifier(this.uid) : super(const AsyncLoading()) {
     _loadUserProfile();
   }
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   Future<void> _loadUserProfile() async {
     try {
-      final user = _auth.currentUser;
-      if (user == null) throw Exception("No user logged in");
-
-      final doc = await _firestore.collection('users').doc(user.uid).get();
+      final doc = await _firestore.collection('users').doc(uid).get();
       if (!doc.exists) throw Exception("User profile not found");
 
       state = AsyncValue.data(UserProfile.fromMap(doc.data()!));
@@ -25,11 +21,14 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
     }
   }
 
-  /// Update a specific field or set of fields in Firestore and local state
-  Future<void> updateProfile(
-      {String? name, int? age, String? major, bool? isTutor, Map<String, dynamic>? tutorProfile}) async {
-    final user = _auth.currentUser;
-    if (user == null || state is! AsyncData) return;
+  Future<void> updateProfile({
+    String? name,
+    int? age,
+    String? major,
+    bool? isTutor,
+    Map<String, dynamic>? tutorProfile,
+  }) async {
+    if (state is! AsyncData) return;
 
     final currentProfile = (state as AsyncData<UserProfile>).value;
 
@@ -40,21 +39,15 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
       email: currentProfile.email,
       schoolDomain: currentProfile.schoolDomain,
       createdAt: currentProfile.createdAt,
-      major: major ?? currentProfile.major, // use new major
-      isTutor: isTutor ?? currentProfile.isTutor, // use new isTutor
+      major: major ?? currentProfile.major,
+      isTutor: isTutor ?? currentProfile.isTutor,
+      tutorProfile: tutorProfile, // optional if your model supports it
     );
 
-    // Update Firestore
-    await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .update(updatedProfile.toMap());
-
-    // Update local state
+    await _firestore.collection('users').doc(uid).update(updatedProfile.toMap());
     state = AsyncValue.data(updatedProfile);
   }
 
-  /// Refresh the profile manually
   Future<void> refreshProfile() async {
     state = const AsyncLoading();
     await _loadUserProfile();
