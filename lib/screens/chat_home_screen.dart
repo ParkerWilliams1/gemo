@@ -7,7 +7,6 @@ import 'package:gemo/screens/menu_screen.dart';
 import 'package:gemo/screens/categories_screen.dart';
 import 'package:gemo/screens/combined_chat_screen.dart';
 
-
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
 
@@ -19,13 +18,17 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+
   bool _isMatching = false;
-  StreamSubscription<DocumentSnapshot>? _matchSubscription;
+  String _matchStatusMessage = 'Finding your match...';
   String _currentCategory = 'General';
+  StreamSubscription<DocumentSnapshot>? _matchSubscription;
+  Timer? _statusTimer;
 
   @override
   void dispose() {
     _matchSubscription?.cancel();
+    _statusTimer?.cancel();
     _cleanupWaitingRoom();
     super.dispose();
   }
@@ -39,14 +42,22 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
   Future<void> _startVideoMatch(String category) async {
     setState(() {
-    _isMatching = true;
-    _currentCategory = category; // Set the current category
+      _isMatching = true;
+      _matchStatusMessage = 'Finding your match...';
+      _currentCategory = category;
+    });
+
+    _statusTimer?.cancel();
+    _statusTimer = Timer(const Duration(seconds: 10), () {
+      if (_isMatching) {
+        setState(() {
+          _matchStatusMessage = 'Still looking for match...';
+        });
+      }
     });
 
     try {
-      final result = await _functions
-          .httpsCallable('matchUser')
-          .call({'category': category});
+      final result = await _functions.httpsCallable('matchUser').call({'category': category});
 
       if (result.data['isNewMatch'] == true) {
         _joinVideoRoom(result.data['roomId']);
@@ -65,11 +76,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    _matchSubscription = _firestore
-        .collection('rooms')
-        .doc(uid)
-        .snapshots()
-        .listen((doc) {
+    _matchSubscription = _firestore.collection('rooms').doc(uid).snapshots().listen((doc) {
       if (doc.exists && doc.data()?['status'] == 'matched') {
         _joinVideoRoom(doc.data()?['roomId']);
       }
@@ -77,22 +84,23 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   }
 
   void _joinVideoRoom(String roomId) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => CombinedChatScreen(
-        chatId: roomId, // or generate a separate chat ID if needed
-        meetingId: roomId,
-        token: "my_token_here",
-        category: _currentCategory,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CombinedChatScreen(
+          chatId: roomId,
+          meetingId: roomId,
+          token: "your-token-here",
+          category: _currentCategory,
+        ),
       ),
-    ),
-  ).then((_) => setState(() => _isMatching = false));
-}
+    ).then((_) => setState(() => _isMatching = false));
+  }
 
   Future<void> _cancelMatch() async {
     await _cleanupWaitingRoom();
     _matchSubscription?.cancel();
+    _statusTimer?.cancel();
     setState(() => _isMatching = false);
   }
 
@@ -131,7 +139,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 20),
-                  Text('Finding your match...', style: TextStyle(fontSize: 18)),
+                  Text(_matchStatusMessage, style: TextStyle(fontSize: 18)),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _cancelMatch,
@@ -147,68 +155,66 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           else
             Center(
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Lets Chat!',
-                  style: TextStyle(
-                    color: Color(0xFF707070),
-                    fontSize: 62,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Lets Chat!',
+                    style: TextStyle(
+                      color: Color(0xFF707070),
+                      fontSize: 62,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                SizedBox(height: 100),
-                ElevatedButton(
-  onPressed: () => _startVideoMatch('General'),
-  style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xFF83B9FF),
-    padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 20),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-  ),
-  child: const Text(
-    'New Chat',
-    style: TextStyle(
-      color: Colors.black,
-      fontSize: 24,
-      fontFamily: 'Inter',
-      fontWeight: FontWeight.w700,
-    ),
-  ),
-),
-const SizedBox(height: 20),
-SizedBox(
-  width: 200, // adjust this to control the width
-  child: ElevatedButton(
-    onPressed: () => Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CategoriesScreen()),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFD3D3D3), // Light grey
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-    child: const Text(
-      'Browse Categories',
-      style: TextStyle(
-        color: Colors.black,
-        fontSize: 18,
-        fontFamily: 'Inter',
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  ),
-),
-
-
-              ],
-            ),
-          )
+                  SizedBox(height: 100),
+                  ElevatedButton(
+                    onPressed: () => _startVideoMatch('General'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF83B9FF),
+                      padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'New Chat',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 24,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CategoriesScreen()),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD3D3D3),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Browse Categories',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
         ],
       ),
     );
