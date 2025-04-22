@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'tutor_profile.dart'; // Import your new model
 
 class UserProfile {
   final String uid;
@@ -9,8 +10,7 @@ class UserProfile {
   final DateTime createdAt;
   final String? major;
   final bool? isTutor;
-
-  var tutorProfile;
+  final TutorProfile? tutorProfile;
 
   UserProfile({
     required this.uid,
@@ -21,6 +21,7 @@ class UserProfile {
     required this.createdAt,
     required this.major,
     required this.isTutor,
+    this.tutorProfile,
   });
 
   Map<String, dynamic> toMap() {
@@ -33,6 +34,7 @@ class UserProfile {
       'createdAt': createdAt,
       'major': major,
       'isTutor': isTutor,
+      'tutorProfile': tutorProfile?.toMap(),
     };
   }
 
@@ -44,8 +46,11 @@ class UserProfile {
       email: map['email'] ?? '',
       schoolDomain: map['schoolDomain'] ?? '',
       createdAt: (map['createdAt'] as Timestamp).toDate(),
-      major: map['major'] ?? '',
-      isTutor: map['tutor'] ?? false,
+      major: map['major'],
+      isTutor: map['isTutor'] ?? false,
+      tutorProfile: map['tutorProfile'] != null
+          ? TutorProfile.fromMap(Map<String, dynamic>.from(map['tutorProfile']))
+          : null,
     );
   }
 }

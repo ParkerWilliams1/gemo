@@ -25,38 +25,46 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
     }
   }
 
-  /// Update a specific field or set of fields in Firestore and local state
-  Future<void> updateProfile(
-      {String? name, int? age, String? major, bool? isTutor, Map<String, dynamic>? tutorProfile}) async {
+  /// Update user profile including tutorProfile fields
+  Future<void> updateProfile({
+    String? name,
+    int? age,
+    String? major,
+    bool? isTutor,
+    Map<String, dynamic>? tutorProfile,
+  }) async {
     final user = _auth.currentUser;
     if (user == null || state is! AsyncData) return;
 
     final currentProfile = (state as AsyncData<UserProfile>).value;
 
-    final updatedProfile = UserProfile(
-      uid: currentProfile.uid,
-      name: name ?? currentProfile.name,
-      age: age ?? currentProfile.age,
-      email: currentProfile.email,
-      schoolDomain: currentProfile.schoolDomain,
-      createdAt: currentProfile.createdAt,
-      major: major ?? currentProfile.major, // use new major
-      isTutor: isTutor ?? currentProfile.isTutor, // use new isTutor
-    );
+    final updatedMap = {
+      'name': name ?? currentProfile.name,
+      'age': age ?? currentProfile.age,
+      'major': major ?? currentProfile.major,
+      'isTutor': isTutor ?? currentProfile.isTutor,
+      if (isTutor == true && tutorProfile != null)
+        'tutorProfile': tutorProfile,
+      if (isTutor == false)
+        'tutorProfile': FieldValue.delete(),
+    };
 
-    // Update Firestore
     await _firestore
         .collection('users')
         .doc(user.uid)
-        .update(updatedProfile.toMap());
+        .set(updatedMap, SetOptions(merge: true));
 
-    // Update local state
-    state = AsyncValue.data(updatedProfile);
+    await refreshProfile();
   }
 
-  /// Refresh the profile manually
+  /// Reload the profile from Firestore safely
   Future<void> refreshProfile() async {
-    state = const AsyncLoading();
-    await _loadUserProfile();
+    try {
+      state = const AsyncLoading();
+      await _loadUserProfile();
+    } catch (e, st) {
+      print("Error refreshing profile: $e");
+      state = AsyncValue.error(e, st);
+    }
   }
 }
