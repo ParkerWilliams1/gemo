@@ -6,12 +6,13 @@ import 'package:gemo/services/match_service.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chathome';
+  const ChatHomeScreen({super.key});
 
   @override
-  _ChatHomeScreenState createState() => _ChatHomeScreenState();
+  ChatHomeScreenState createState() => ChatHomeScreenState();
 }
 
-class _ChatHomeScreenState extends State<ChatHomeScreen> {
+class ChatHomeScreenState extends State<ChatHomeScreen> {
   bool _isMatching = false;
   final MatchService _matchService = MatchService();
 
@@ -89,11 +90,11 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _cancelMatch,
-                    child: Text('Cancel'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
+                    child: Text('Cancel'),
                   ),
                 ],
               ),
