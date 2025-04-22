@@ -22,16 +22,27 @@ class _WaitingForMatchScreenState extends State<WaitingForMatchScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   StreamSubscription<DocumentSnapshot>? _userSubscription;
+  Timer? _stillLookingTimer;
+  bool _showStillLookingMessage = false;
 
   @override
   void initState() {
     super.initState();
     _listenForChatAssignment();
+
+    _stillLookingTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted) {
+        setState(() {
+          _showStillLookingMessage = true;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _userSubscription?.cancel();
+    _stillLookingTimer?.cancel();
     super.dispose();
   }
 
@@ -94,6 +105,14 @@ class _WaitingForMatchScreenState extends State<WaitingForMatchScreen> {
               "Looking for a match in '${widget.category}'...",
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Visibility(
+              visible: _showStillLookingMessage,
+              child: const Text(
+                "Still looking... hang tight!",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
             ),
             const SizedBox(height: 30),
             ElevatedButton(
