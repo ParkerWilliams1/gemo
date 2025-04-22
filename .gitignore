@@ -11,10 +11,11 @@ build/
 android/
 !android/app/src/main/res/
 ios/
+!ios/Runner/Assets.xcassets
+
 linux/
 web/
 macos/
-!macos/Runner/Assets.xcassets
 windows/
 
 # Expo
