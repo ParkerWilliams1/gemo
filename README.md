@@ -1,3 +1,4 @@
+<p align="center"><img width="128" alt="Gemo Logo" src="https://raw.githubusercontent.com/ParkerWilliams1/gemo/main/src/assets/gemo.png"></p>
 # **Gemo**  
 
 ## **Overview**  
