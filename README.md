@@ -1,4 +1,4 @@
-![Gemo](/assets/gemo.png)
+<img src="/assets/gemo.png" alt="Gemo" width="128" height="128">
 
 # Gemo
 
