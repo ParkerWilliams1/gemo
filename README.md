@@ -1,5 +1,6 @@
-<p align="center"><img width="128" alt="Gemo Logo" src="https://raw.githubusercontent.com/ParkerWilliams1/gemo/main/src/assets/gemo.png"></p>
-# **Gemo**  
+![Gemo](/assets/gemo.png)
+
+# Gemo
 
 ## **Overview**  
 Gemo is a college-exclusive video chat app designed for students to connect, study, and socialize securely. It fosters real-time interactions in a safe and student-friendly environment.  
