@@ -28,7 +28,7 @@ Gemo was created to make it easier for students to engage with peers—whether f
 ## Live Demo
 
 Watch a walkthrough of Gemo in action:  
-[![Watch Demo](https://img.youtube.com/vi/vh2e56im5fw/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE)
+[![Watch Demo](https://img.youtube.com/vi/vh2e56im5fw/0.jpg)](https://www.youtube.com/watch?v=vh2e56im5fw)
 
 ---
 
